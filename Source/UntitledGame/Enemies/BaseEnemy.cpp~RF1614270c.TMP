@@ -1,0 +1,115 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#include "BaseEnemy.h"
+
+
+// Sets default values
+ABaseEnemy::ABaseEnemy()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = false;
+
+	SetRootComponent(GetCapsuleComponent());
+
+	GetCapsuleComponent()->SetCollisionProfileName(DamagableCollisionPreset);
+
+	AttackRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Attack Range Sphere"));
+	AttackRangeSphere->SetupAttachment(GetRootComponent());
+	AttackRangeSphere->SetSphereRadius(AttackRange);
+
+	NoticeRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Notice Range Sphere"));
+	NoticeRangeSphere->SetupAttachment(GetRootComponent());
+	NoticeRangeSphere->SetSphereRadius(NoticeRange);
+
+	ForgetRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Forget Range Sphere"));
+	ForgetRangeSphere->SetupAttachment(GetRootComponent());
+	ForgetRangeSphere->SetSphereRadius(ForgetRange);
+
+}
+
+// Called when the game starts or when spawned
+void ABaseEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	GetMesh()->bRenderCustomDepth = true;
+
+	AttackRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Damagable);
+	NoticeRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Damagable);
+	ForgetRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Damagable);
+
+	SetTeamLabel(2);
+	//GetCapsuleComponent()->SetCollisionProfileName(EnemyCollisionPreset);
+	/*
+	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_Enemy);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_CursorTrace, ECollisionResponse::ECR_Block);
+	*/
+}
+
+// Called every frame
+void ABaseEnemy::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+bool ABaseEnemy::Interact(AController * InstigatorController, APawn * InstigatorPawn)
+{
+	return false;
+}
+
+void ABaseEnemy::Hightlight(bool bTurnOn)
+{
+	GetMesh()->SetRenderCustomDepth(bTurnOn);
+}
+
+FText ABaseEnemy::GetInteractableName_Implementation() const
+{
+	return DisplayName;
+}
+
+float ABaseEnemy::TakeDamage(float Damage, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	CurrentHealth = FMath::Clamp<float>(CurrentHealth - Damage, 0.f, MaxHealth);
+	if(FMath::IsNearlyEqual(CurrentHealth, 0))
+	{
+		Destroy();
+		return Damage;
+	}
+	return Damage;
+}
+
+void ABaseEnemy::SetTeamLabel(uint8 NewLabel)
+{
+	CurrentTeam = NewLabel;
+}
+
+uint8 ABaseEnemy::GetTeamLabel() const
+{
+	return CurrentTeam;
+}
+
+float ABaseEnemy::GetHealth() const
+{
+	return CurrentHealth;
+}
+
+float ABaseEnemy::GetMaxHealth() const
+{
+	return MaxHealth;
+}
+
+float ABaseEnemy::GetHealthPercentage() const
+{
+	if(MaxHealth == 0.f)
+		return 0.f;
+	return CurrentHealth / MaxHealth;
+}
+
+TArray<AActor*> ABaseEnemy::GetEnemiesInRange() const
+{
+	TArray<AActor *> ToReturn;
+	NoticeRangeSphere->GetOverlappingActors(ToReturn);
+	return ToReturn;
+}
