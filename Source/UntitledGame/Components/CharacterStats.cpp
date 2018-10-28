@@ -23,8 +23,6 @@ void UCharacterStats::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	UE_LOG(LogTemp, Error, TEXT("Size after: %d"), ElementalResists.Num());
-
 	
 }
 

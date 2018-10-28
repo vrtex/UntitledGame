@@ -13,6 +13,15 @@ FDamageInfo::FDamageInfo()
 	}
 }
 
+void FDamageInfo::Scale(float Multiplier)
+{
+	for(auto Element : FDamageInfo::GetAllElements())
+	{
+		PhysicalDamage[Element] = PhysicalDamage[Element] * Multiplier;
+		MagicDamage[Element] = MagicDamage[Element] * Multiplier;
+	}
+}
+
 float FDamageInfo::GetTotalDamage() const
 {
 	float Sum = 0.0f;

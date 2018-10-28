@@ -79,38 +79,44 @@ ABaseEnemy * ABaseEnemyController::GetControledEnemy() const
 void ABaseEnemyController::EnemyInRange(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	if(OtherActor == Cast<AActor>(TargetedActor) && GetBlackboardComponent())
+	{
+		SetFocus(OtherActor);
 		GetBlackboardComponent()->SetValueAsBool(BaseEnemyIsTargetInRangeKey, true);
+	}
 
 }
 
 void ABaseEnemyController::EnemyOutOfRange(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
 	if(OtherActor == Cast<AActor>(TargetedActor) && GetBlackboardComponent())
+	{
+		ClearFocus(EAIFocusPriority::Gameplay);
 		GetBlackboardComponent()->ClearValue(BaseEnemyIsTargetInRangeKey);
+	}
 }
 
 void ABaseEnemyController::EnemyDetected(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	ITeamInterface * AsTeamAgent = Cast<ITeamInterface>(OtherActor);
-	if(!AsTeamAgent || 
-		GetControledEnemy()->GetRelationTowards(AsTeamAgent->GetTeamLabel()) != ETeamRelation::Hostile)
+	ABaseEntity * AsBaseEntity = Cast<ABaseEntity>(OtherActor);
+	if(!AsBaseEntity || 
+		GetControledEnemy()->GetRelationTowards(AsBaseEntity->GetTeamLabel()) != ETeamRelation::Hostile)
 		return;
 
 	// TODO: Aggro priority (?)
 	if(TargetedActor) // already has a target
 		return;
 
-	TargetedActor = AsTeamAgent;
-	GetBlackboardComponent()->SetValueAsObject(BaseEnemyTargetActorKey, Cast<ABaseCharacter>(TargetedActor));
+	TargetedActor = AsBaseEntity;
+	GetBlackboardComponent()->SetValueAsObject(BaseEnemyTargetActorKey, Cast<ABaseEntity>(TargetedActor));
 }
 
 void ABaseEnemyController::ForgetEnemy(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
-	ITeamInterface * AsTeamAgent = Cast<ITeamInterface>(OtherActor);
-	if(!AsTeamAgent)
+	ABaseEntity * AsBaseEntity = Cast<ABaseEntity>(OtherActor);
+	if(!AsBaseEntity)
 		return;
 
-	if(TargetedActor != AsTeamAgent)
+	if(TargetedActor != AsBaseEntity)
 		return;
 
 	TArray<AActor *> EnemiesInRange = GetControledEnemy()->GetEnemiesInRange();

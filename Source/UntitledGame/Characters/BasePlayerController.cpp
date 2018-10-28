@@ -18,7 +18,15 @@ void ABasePlayerController::BeginPlay()
 	if(HealthBarClass.Get())
 	{
 		HealthBar = Cast<UHealthBar>(CreateWidget(this, HealthBarClass.Get(), FName("Health Bar Display")));
-		HealthBar->AddToViewport();
+		if(!HealthBar)
+		{
+			UE_LOG(LogTemp, Error, TEXT("EnemyHealthBar not created"));
+		}
+		else
+		{
+			HealthBar->AddToViewport();
+			HealthBar->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
 	}
 }
 
@@ -33,6 +41,7 @@ void ABasePlayerController::Tick(float DeltaTime)
 	if(TargetActor)
 		MoveToActor(TargetActor);
 	else if(CurrentMovementType != EMovementTargetType::None)
+		// TODO: shouldn't this be Ground?
 		FollowCursor();
 
 	/*
@@ -207,7 +216,7 @@ void ABasePlayerController::NPCDetected(UPrimitiveComponent * OverlappedComponen
 void ABasePlayerController::SetMovementTarget(EMovementTargetType MoveType, AActor * NewTargetActor)
 {
 	ClearMovementTarget();
-	ITeamInterface * AsTeamAgent = nullptr;
+	ABaseEntity * AsBaseEntity = nullptr;
 	switch(MoveType)
 	{
 	case EMovementTargetType::None:
@@ -225,9 +234,9 @@ void ABasePlayerController::SetMovementTarget(EMovementTargetType MoveType, AAct
 		TargetActor = NewTargetActor;
 		break;
 	case EMovementTargetType::Enemy:
-		AsTeamAgent = Cast<ITeamInterface>(NewTargetActor);
-		if(!AsTeamAgent || 
-			AsTeamAgent->GetRelationTowards(GetControlledCharacter()->GetTeamLabel()) != ETeamRelation::Hostile)
+		AsBaseEntity = Cast<ABaseEntity>(NewTargetActor);
+		if(!AsBaseEntity || 
+			AsBaseEntity->GetRelationTowards(GetControlledCharacter()->GetTeamLabel()) != ETeamRelation::Hostile)
 		{
 			ClearMovementTarget();
 			return;
@@ -266,10 +275,10 @@ EMovementTargetType ABasePlayerController::GetIntendedTargetType(FHitResult & Hi
 		return EMovementTargetType::NPC;
 	}
 
-	if(Cast<ITeamInterface>(HitUnderCursor.GetActor()))
+	if(Cast<ABaseEntity>(HitUnderCursor.GetActor()))
 	{
-		ITeamInterface * AsTeamAgent = Cast<ITeamInterface>(HitUnderCursor.GetActor());
-		if(GetControlledCharacter()->GetRelationTowards(AsTeamAgent->GetTeamLabel()) == ETeamRelation::Hostile)
+		ABaseEntity * AsBaseEntity = Cast<ABaseEntity>(HitUnderCursor.GetActor());
+		if(GetControlledCharacter()->GetRelationTowards(AsBaseEntity->GetTeamLabel()) == ETeamRelation::Hostile)
 			return EMovementTargetType::Enemy;
 		else
 		{
@@ -306,16 +315,17 @@ bool ABasePlayerController::HighlightUnderCursor()
 
 void ABasePlayerController::ShowHealthBar()
 {
-	ITeamInterface * AsEnemy = Cast<ITeamInterface>(FocusedIteractable);
+	ABaseEntity * AsEnemy = Cast<ABaseEntity>(FocusedIteractable);
 	if(!AsEnemy || GetControlledCharacter()->GetRelationTowards(AsEnemy->GetTeamLabel()) != ETeamRelation::Hostile)
 	{
-		HealthBar->SetVisibility(ESlateVisibility::Hidden);
+		HealthBar->RemoveFromParent();
+		// HealthBar->SetVisibility(ESlateVisibility::Hidden);
 		HealthBar->SetOwningEnemy(nullptr);
 		return;
 	}
-
+	if(!HealthBar->IsInViewport())
+		HealthBar->AddToViewport();
 	HealthBar->SetOwningEnemy(Cast<AActor>(FocusedIteractable));
-	HealthBar->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
 void ABasePlayerController::ClearMovementTarget()

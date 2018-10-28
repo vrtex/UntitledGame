@@ -47,5 +47,7 @@ public:
 
 	FDamageInfo();
 
+	void Scale(float);
+
 	float GetTotalDamage() const;
 };

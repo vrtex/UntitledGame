@@ -9,10 +9,11 @@
 #include "Interface/HealthBar.h"
 #include "Interfaces/TeamInterface.h"
 #include "Components/DetectionSphere.h"
+#include "BaseEntity.h"
 #include "BaseEnemy.generated.h"
 
 UCLASS()
-class UNTITLEDGAME_API ABaseEnemy : public ACharacter, public IInteractable, public ITeamInterface
+class UNTITLEDGAME_API ABaseEnemy : public ABaseEntity, public IInteractable
 {
 	GENERATED_BODY()
 	
@@ -41,21 +42,8 @@ public:
 
 	virtual FText GetInteractableName_Implementation() const;
 
-	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
 
-	virtual void SetTeamLabel(uint8 Label) override;
-
-	virtual uint8 GetTeamLabel() const override;
-
-	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ACharacter * DamageDealer, AController * Instigator) override;
-
-	// TODO: Move these to TeamInterface
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
-		float GetHealth() const;
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
-		float GetMaxHealth() const;
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
-		float GetHealthPercentage() const;
 	UFUNCTION(BlueprintCallable, Category = "General")
 		void FaceActor(AActor * Target);
 
@@ -65,7 +53,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 		TArray<AActor *> GetEnemiesInRange() const;
 
-public:
+public: // fucks given: 0
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Setup")
 		UDetectionSphere * AttackRangeSphere = nullptr;
@@ -96,5 +84,4 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Setup|UI")
 		FText DisplayName;
 
-	uint8 CurrentTeam;
 };

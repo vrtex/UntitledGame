@@ -69,68 +69,12 @@ FText ABaseEnemy::GetInteractableName_Implementation() const
 	return DisplayName;
 }
 
-float ABaseEnemy::TakeDamage(float Damage, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+bool ABaseEnemy::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
 {
-	// TODO: resists!
-	CurrentHealth = FMath::Clamp<float>(CurrentHealth - Damage, 0.f, MaxHealth);
-	if(FMath::IsNearlyEqual(CurrentHealth, 0))
-	{
+	bool bDealtSomething = Super::DealDamage(Damage, DealtDamage, DamageDealer, Instigator);
+	if(IsDead())
 		Destroy();
-		return Damage;
-	}
-	return Damage;
-}
-
-void ABaseEnemy::SetTeamLabel(uint8 NewLabel)
-{
-	CurrentTeam = NewLabel;
-}
-
-uint8 ABaseEnemy::GetTeamLabel() const
-{
-	return CurrentTeam;
-}
-
-bool ABaseEnemy::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ACharacter * DamageDealer, AController * Instigator)
-{
-	float DamageToDeal = 0.f;
-	for(TPair<EDamageElement, float> PartialDmg : Damage.PhysicalDamage)
-	{
-		float ThisElementDMG = (1.f - GetResistTo(PartialDmg.Key, true)) * PartialDmg.Value;
-		DamageToDeal += ThisElementDMG;
-		DealtDamage.PhysicalDamage[PartialDmg.Key] = ThisElementDMG;
-	}
-	for(TPair<EDamageElement, float> PartialDmg : Damage.PhysicalDamage)
-	{
-		float ThisElementDMG = (1.f - GetResistTo(PartialDmg.Key, false)) * PartialDmg.Value;
-		DamageToDeal += ThisElementDMG;
-		DealtDamage.MagicDamage[PartialDmg.Key] = ThisElementDMG;
-	}
-	CurrentHealth = FMath::Clamp<float>(CurrentHealth - Damage.GetTotalDamage(), 0.f, MaxHealth);
-	if(FMath::IsNearlyEqual(CurrentHealth, 0))
-	{
-		Destroy();
-		return true;
-	}
-
-	return !FMath::IsNearlyEqual(0.0f, DealtDamage.GetTotalDamage());
-}
-
-float ABaseEnemy::GetHealth() const
-{
-	return CurrentHealth;
-}
-
-float ABaseEnemy::GetMaxHealth() const
-{
-	return MaxHealth;
-}
-
-float ABaseEnemy::GetHealthPercentage() const
-{
-	if(MaxHealth == 0.f)
-		return 0.f;
-	return CurrentHealth / MaxHealth;
+	return bDealtSomething;
 }
 
 void ABaseEnemy::FaceActor(AActor * Target)
@@ -148,8 +92,8 @@ float ABaseEnemy::Attack(AActor * Target)
 {
 	if(!IsValid(Target))
 		return 0.0f;
-	ITeamInterface * AsTeamAgent = Cast<ITeamInterface>(Target);
-	if(!AsTeamAgent)
+	ABaseEntity * AsBaseEntity = Cast<ABaseEntity>(Target);
+	if(!AsBaseEntity)
 		return 0.0f;
 
 	GetCharacterMovement()->StopMovementImmediately();
@@ -159,8 +103,7 @@ float ABaseEnemy::Attack(AActor * Target)
 	DamageInfo.PhysicalDamage[EDamageElement::Fire] = 10;
 	FDamageInfo DealtDamageInfo;
 
-
-	AsTeamAgent->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
+	AsBaseEntity->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
 
 	return 0.0f;
 }
@@ -172,7 +115,7 @@ TArray<AActor*> ABaseEnemy::GetEnemiesInRange() const
 	for(int32 i = Enemies.Num() - 1; i >= 0; --i)
 	{
 		AActor * Current = Enemies[i];
-		ITeamInterface * AsTeamAgent = Cast<ITeamInterface>(Current);
+		ABaseEntity * AsTeamAgent = Cast<ABaseEntity>(Current);
 		if((!AsTeamAgent) || 
 			GetRelationTowards(AsTeamAgent->GetTeamLabel()) != ETeamRelation::Hostile)
 		{

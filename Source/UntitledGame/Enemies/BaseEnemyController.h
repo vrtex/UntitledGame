@@ -56,7 +56,7 @@ private:
 
 	ABaseEnemy * Controlled = nullptr;
 
-	ITeamInterface * TargetedActor = nullptr;
+	ABaseEntity * TargetedActor = nullptr;
 
 
 

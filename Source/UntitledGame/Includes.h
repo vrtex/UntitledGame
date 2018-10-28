@@ -22,6 +22,7 @@
 #include "Runtime/AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "Runtime/Engine/Classes/GameFramework/Character.h"
+#include "Runtime/Engine/Classes/Components/ChildActorComponent.h"
 
 
 

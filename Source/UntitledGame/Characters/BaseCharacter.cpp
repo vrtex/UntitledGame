@@ -45,7 +45,6 @@ ABaseCharacter::ABaseCharacter()
 	InteractRangeSphere->SetupAttachment(RootComponent);
 	InteractRangeSphere->SetSphereRadius(InteractRange);
 
-	CharacterStats = CreateDefaultSubobject<UCharacterStats>(FName("Character Stats"));
 	
 	Backpack = CreateDefaultSubobject<UInventory>(FName("Backpack"));
 }
@@ -63,7 +62,6 @@ void ABaseCharacter::BeginPlay()
 	InteractRangeSphere->SetSphereRadius(InteractRange);
 
 	SetTeamLabel(1);
-
 
 }
 
@@ -97,35 +95,6 @@ void ABaseCharacter::ChangeZoom(int32 Change)
 	CameraBoom->TargetArmLength = NewLength;
 }
 
-
-void ABaseCharacter::SetTeamLabel(uint8 NewLabel)
-{
-	CurrentTeam = NewLabel;
-}
-
-uint8 ABaseCharacter::GetTeamLabel() const
-{
-	return CurrentTeam;
-}
-
-bool ABaseCharacter::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ACharacter * DamageDealer, AController * Instigator)
-{
-	for(TPair<EDamageElement, float> PartialDamage : Damage.PhysicalDamage)
-	{
-		float ThisElement = Damage.PhysicalDamage[PartialDamage.Key] * (1.f - GetResistTo(PartialDamage.Key, true));
-		DealtDamage.PhysicalDamage[PartialDamage.Key] = ThisElement;
-	}
-
-	for(TPair<EDamageElement, float> PartialDamage : Damage.MagicDamage)
-	{
-		float ThisElement = Damage.MagicDamage[PartialDamage.Key] * (1.f - GetResistTo(PartialDamage.Key, false));
-		DealtDamage.MagicDamage[PartialDamage.Key] = ThisElement;
-	}
-	UE_LOG(LogTemp, Warning, TEXT("%f: Taking %f damage"), GetWorld()->GetTimeSeconds(), DealtDamage.GetTotalDamage());
-
-	return !FMath::IsNearlyEqual(0, DealtDamage.GetTotalDamage());
-}
-
 void ABaseCharacter::FaceActor(AActor * Target)
 {
 	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(
@@ -137,12 +106,18 @@ void ABaseCharacter::FaceActor(AActor * Target)
 	SetActorRotation(TargetRotation);
 }
 
+bool ABaseCharacter::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
+{
+	float TotalDamage = Super::DealDamage(Damage, DealtDamage, DamageDealer, Instigator);
+	return TotalDamage;
+}
+
 float ABaseCharacter::Attack(AActor * Target)
 {
 	if(!IsValid(Target))
 		return 0.f;
-	ITeamInterface * AsTeamTarget = Cast<ITeamInterface>(Target);
-	if(!AsTeamTarget || AsTeamTarget->GetRelationTowards(GetTeamLabel()) != ETeamRelation::Hostile)
+	ABaseEntity * AsBaseEntity = Cast<ABaseEntity>(Target);
+	if(!AsBaseEntity || AsBaseEntity->GetRelationTowards(GetTeamLabel()) != ETeamRelation::Hostile)
 	{
 		return 0.f;
 	}
@@ -151,8 +126,7 @@ float ABaseCharacter::Attack(AActor * Target)
 	FDamageInfo DamageInfo;
 	DamageInfo.PhysicalDamage.Add(EDamageElement::None, 10.f);
 	FDamageInfo DealtDamageInfo;
-
-	float ActualDamage = AsTeamTarget->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
+	float ActualDamage = AsBaseEntity->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
 	return DealtDamageInfo.GetTotalDamage();
 }
 
@@ -198,11 +172,6 @@ TArray<AActor*> ABaseCharacter::GetEnemiesInRange() const
 	TArray<AActor*> Enemies;
 	AttackRangeSphere->GetOverlappingActors(Enemies);
 	return Enemies;
-}
-
-float ABaseCharacter::GetResistTo(EDamageElement Element, bool bPhysical) const
-{
-	return CharacterStats->GetResistTo(Element);
 }
 
 TArray<AActor*> ABaseCharacter::GetItemsInRange() const

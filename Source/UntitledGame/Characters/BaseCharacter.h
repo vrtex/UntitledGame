@@ -11,13 +11,14 @@
 #include "Interfaces/TeamInterface.h"
 #include "Characters/Inventory.h"
 #include "Components/CharacterStats.h"
+#include "BaseEntity.h"
 #include "BaseCharacter.generated.h"
 
 
 
 
 UCLASS()
-class UNTITLEDGAME_API ABaseCharacter : public ACharacter, public ITeamInterface
+class UNTITLEDGAME_API ABaseCharacter : public ABaseEntity
 {
 	GENERATED_BODY()
 
@@ -44,20 +45,15 @@ public:
 
 	void ChangeZoom(int32 Change);
 
-	virtual void SetTeamLabel(uint8 Label) override;
-
-	virtual uint8 GetTeamLabel() const override;
-
-	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ACharacter * DamageDealer, AController * Instigator) override;
-
 	UFUNCTION(BlueprintCallable, Category = "General")
 		void FaceActor(AActor * Target);
+
+	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 		float Attack(AActor * Target);
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 		TArray<AActor *> GetEnemiesInRange() const;
-	float GetResistTo(EDamageElement Element, bool bPhysical) const override;
 
 	UFUNCTION(BlueprintCallable, Category = "NPC")
 		bool InteractWith(class ABaseNPC * NPC);
@@ -94,10 +90,7 @@ public: // no fucks given
 		UDetectionSphere * InteractRangeSphere = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UInventory * Backpack = nullptr;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		UCharacterStats * CharacterStats = nullptr;
 
-	uint8 CurrentTeam;
 
 
 };

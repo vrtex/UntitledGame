@@ -44,11 +44,10 @@ public:
 		return ETeamRelation::Hostile;
 	}
 
-	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ACharacter * DamageDealer, AController * Instigator) = 0;
+	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, class ABaseEntity * DamageDealer, AController * Instigator) = 0;
 
 	// TODO: make this blueprint native event
 	// UFUNCTION(BlueprintNativeEvent, BlueprintPure)
-	virtual float GetResistTo(EDamageElement Element, bool bPhysical) const { return 0.f; };
+	virtual float GetResistTo(EDamageElement Element, EDamageType Type) const { return 0.f; };
 
 };
-
