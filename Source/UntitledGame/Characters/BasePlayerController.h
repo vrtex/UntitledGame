@@ -11,6 +11,7 @@
 #include "Interface/HealthBar.h"
 #include "Interface/InventoryWidget.h"
 #include "NPC/BaseNPC.h"
+#include "ActiveSkills/BaseSkill.h"
 #include "BasePlayerController.generated.h"
 
 /**
@@ -42,6 +43,8 @@ class UNTITLEDGAME_API ABasePlayerController : public APlayerController
 		void OnLeftClick();
 	UFUNCTION(BlueprintCallable, Category = "Input")
 		void OnLeftClickRelease();
+	UFUNCTION(BlueprintCallable, Category = "Input")
+		void UseAlternateSkill();
 	UFUNCTION(BlueprintCallable, Category = "Input")
 		void ChangeCameraZoom(bool ZoomIn);
 	UFUNCTION(BlueprintCallable, Category = "Input")
@@ -89,7 +92,9 @@ private:
 
 	EMovementTargetType CurrentMovementType;
 
-	AActor * TargetActor;
+	AActor * TargetActor = nullptr;
+
+	//UBaseSkill * CurrentSkill = nullptr;
 
 	ABaseCharacter * ControlledCharacter = nullptr;
 
@@ -107,7 +112,7 @@ private:
 
 	void TryPickupItem(APickupItem * ToPickup);
 
-	float TryAttack(AActor * Target);
+	// float TryAttack(AActor * Target);
 
 	//APickupItem * TargetItem = nullptr;
 	

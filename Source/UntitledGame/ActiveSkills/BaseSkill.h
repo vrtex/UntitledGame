@@ -19,7 +19,7 @@ enum class ESkillSlot : uint8
 
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNTITLEDGAME_API UBaseSkill : public UActorComponent
 {
 	GENERATED_BODY()
@@ -33,9 +33,25 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	// TargetLocation: mainly for skills not directed at specific entity
+	UFUNCTION(BlueprintNativeEvent, Category = "Skills")
+		bool Use(class ABaseEntity * User, class ABaseEntity * Target, FVector TargetLocation);
 		
-	
+	virtual bool Use_Implementation(class ABaseEntity * User, class ABaseEntity * Target, FVector TargetLocation);
+
+	UFUNCTION(BlueprintPure, Category = "Skills")
+		float GetRange() const;
+
+	UFUNCTION(BlueprintPure, Category = "Skills")
+		float NeedsTarget() const;
+
+protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
+		float Range = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
+		bool bNeedsTarget = true;
+
 };

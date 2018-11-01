@@ -77,17 +77,6 @@ bool ABaseEnemy::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamag
 	return bDealtSomething;
 }
 
-void ABaseEnemy::FaceActor(AActor * Target)
-{
-	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(
-		GetActorLocation(),
-		Target->GetActorLocation()
-	);
-	TargetRotation.Roll = 0;
-	TargetRotation.Pitch = 0;
-	SetActorRotation(TargetRotation);
-}
-
 float ABaseEnemy::Attack(AActor * Target)
 {
 	if(!IsValid(Target))

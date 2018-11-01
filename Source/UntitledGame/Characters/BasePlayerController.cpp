@@ -14,7 +14,7 @@ void ABasePlayerController::BeginPlay()
 	bShowMouseCursor = true;
 
 	ClearMovementTarget();
-	
+
 	if(HealthBarClass.Get())
 	{
 		HealthBar = Cast<UHealthBar>(CreateWidget(this, HealthBarClass.Get(), FName("Health Bar Display")));
@@ -112,10 +112,11 @@ void ABasePlayerController::OnLeftClick()
 		ClearMovementTarget();
 		break;
 	case EMovementTargetType::Enemy:
+		GetControlledCharacter()->UseSkill(ESkillSlot::Primary, Cast<ABaseEntity>(TargetActor), Hit.ImpactPoint);
 		if(!GetControlledCharacter()->GetEnemiesInRange().Contains(TargetActor))
 			break;
-		GetControlledCharacter()->Attack(TargetActor);
-		ClearMovementTarget();
+		//EnemyDetected(nullptr, TargetActor, nullptr, 0, false, FHitResult());
+		//ClearMovementTarget();
 		break;
 	case EMovementTargetType::NPC:
 		if(!GetControlledCharacter()->IsInteractableInRange(TargetActor))
@@ -133,6 +134,15 @@ void ABasePlayerController::OnLeftClickRelease()
 {
 	if(CurrentMovementType == EMovementTargetType::Ground)
 		ClearMovementTarget();
+}
+
+void ABasePlayerController::UseAlternateSkill()
+{
+	FHitResult Hit;
+	EMovementTargetType MoveType = GetIntendedTargetType(Hit);
+	if(MoveType != EMovementTargetType::Enemy)
+		return;
+	GetControlledCharacter()->UseSkill(ESkillSlot::Secondary, Cast<ABaseEntity>(Hit.GetActor()), Hit.ImpactPoint);
 }
 
 void ABasePlayerController::ChangeCameraZoom(bool ZoomIn)
@@ -179,8 +189,13 @@ void ABasePlayerController::EnemyDetected(UPrimitiveComponent * OverlappedCompon
 		return;
 	if(!IsValid(OtherActor) || OtherActor != TargetActor)
 		return;
+	ABaseEntity * AsBaseEntity = Cast<ABaseEntity>(OtherActor);
+	if(!AsBaseEntity ||
+		GetControlledCharacter()->GetRelationTowards(AsBaseEntity->GetTeamLabel()) != ETeamRelation::Hostile)
+		return;
 
-	GetControlledCharacter()->Attack(TargetActor);
+	// GetControlledCharacter()->UseCurrentSkill();
+	//GetControlledCharacter()->Attack(TargetActor);
 	ClearMovementTarget();
 }
 
@@ -235,7 +250,7 @@ void ABasePlayerController::SetMovementTarget(EMovementTargetType MoveType, AAct
 		break;
 	case EMovementTargetType::Enemy:
 		AsBaseEntity = Cast<ABaseEntity>(NewTargetActor);
-		if(!AsBaseEntity || 
+		if(!AsBaseEntity ||
 			AsBaseEntity->GetRelationTowards(GetControlledCharacter()->GetTeamLabel()) != ETeamRelation::Hostile)
 		{
 			ClearMovementTarget();
@@ -259,7 +274,7 @@ void ABasePlayerController::SetMovementTarget(EMovementTargetType MoveType, AAct
 
 	CurrentMovementType = MoveType;
 }
-	
+
 EMovementTargetType ABasePlayerController::GetIntendedTargetType(FHitResult & HitUnderCursor)
 {
 	GetHitResultUnderCursor(CursorTraceChannel, false, HitUnderCursor);
@@ -359,7 +374,7 @@ void ABasePlayerController::TryPickupItem(APickupItem * ToPickup)
 		return;
 	}
 }
-
+/*
 float ABasePlayerController::TryAttack(AActor * Target)
 {
 	if(!IsValid(Target))
@@ -379,3 +394,4 @@ float ABasePlayerController::TryAttack(AActor * Target)
 	}
 	return 0.f;
 }
+*/

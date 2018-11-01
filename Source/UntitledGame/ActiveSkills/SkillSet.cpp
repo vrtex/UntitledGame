@@ -25,7 +25,10 @@ void USkillSet::BeginPlay()
 bool USkillSet::ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill)
 {
 	if(!NewSkill.Get())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Trying to set skill to none on actor %s"), *GetOwner()->GetName());
 		return false;
+	}
 
 	UBaseSkill * CreatedSkill = NewObject<UBaseSkill>(this, NewSkill.Get());
 
@@ -44,6 +47,16 @@ bool USkillSet::ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill)
 
 	CurrentSkills[Slot] = CreatedSkill;
 	return true;
+}
+
+bool USkillSet::UseSkill(ESkillSlot Slot, ABaseEntity * User, ABaseEntity * Target, const FVector & TargetLocation)
+{
+	return GetSkill(Slot) ? GetSkill(Slot)->Use(User, Target, TargetLocation) : false;
+}
+
+UBaseSkill * USkillSet::GetSkill(ESkillSlot Slot) const
+{
+	return CurrentSkills.Contains(Slot) ? CurrentSkills[Slot] : nullptr;
 }
 
 void USkillSet::AddSkills()

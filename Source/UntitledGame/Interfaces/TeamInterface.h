@@ -26,6 +26,10 @@ class UNTITLEDGAME_API UTeamInterface : public UInterface
 	GENERATED_UINTERFACE_BODY()
 };
 
+/**
+* shit's deprecated, don't use
+*/
+
 class UNTITLEDGAME_API ITeamInterface
 {
 	GENERATED_IINTERFACE_BODY()

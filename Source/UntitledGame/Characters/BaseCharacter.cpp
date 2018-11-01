@@ -47,6 +47,7 @@ ABaseCharacter::ABaseCharacter()
 
 	
 	Backpack = CreateDefaultSubobject<UInventory>(FName("Backpack"));
+	SkillSet = CreateDefaultSubobject<USkillSet>(FName("Skill set"));
 }
 
 // Called when the game starts or when spawned
@@ -60,9 +61,10 @@ void ABaseCharacter::BeginPlay()
 	PickupRangeSphere->SetSphereRadius(ItemPickupRange);
 	InteractRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_NPC);
 	InteractRangeSphere->SetSphereRadius(InteractRange);
+	if(BaseAttackSkillClass.Get())
+		SkillSet->ChangeSkill(ESkillSlot::Primary, BaseAttackSkillClass);
 
 	SetTeamLabel(1);
-
 }
 
 // Called every frame
@@ -89,27 +91,47 @@ float ABaseCharacter::GetAttackRange() const
 	return AttackRangeSphere->GetScaledSphereRadius();
 }
 
+void ABaseCharacter::SetAttackRange(float NewRange)
+{
+	AttackRangeSphere->SetSphereRadius(NewRange);
+	AttackRange = NewRange;
+}
+
 void ABaseCharacter::ChangeZoom(int32 Change)
 {
 	float NewLength = FMath::Clamp<float>(CameraBoom->TargetArmLength + (float)Change, 300, 1000);
 	CameraBoom->TargetArmLength = NewLength;
 }
 
-void ABaseCharacter::FaceActor(AActor * Target)
-{
-	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(
-		GetActorLocation(),
-		Target->GetActorLocation()
-	);
-	TargetRotation.Roll = 0;
-	TargetRotation.Pitch = 0;
-	SetActorRotation(TargetRotation);
-}
 
 bool ABaseCharacter::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
 {
 	float TotalDamage = Super::DealDamage(Damage, DealtDamage, DamageDealer, Instigator);
 	return TotalDamage;
+}
+
+bool ABaseCharacter::UseSkill(ESkillSlot Slot, ABaseEntity * Target, FVector Location)
+{
+	CurrentSkill = GetSkill(Slot);
+	if(!CurrentSkill)
+		return false;
+	TargetActor = Target;
+	TargetLocation = Location;
+	SetAttackRange(CurrentSkill->GetRange());
+	bool bUsedSkill = CurrentSkill->Use(this, TargetActor, TargetLocation);
+	return bUsedSkill;
+}
+
+bool ABaseCharacter::UseCurrentSkill()
+{
+	if(!CurrentSkill)
+		return false;
+	return CurrentSkill->Use(this, TargetActor, TargetLocation);
+}
+
+UBaseSkill * ABaseCharacter::GetSkill(ESkillSlot Slot)
+{
+	return SkillSet->GetSkill(Slot);
 }
 
 float ABaseCharacter::Attack(AActor * Target)
@@ -126,7 +148,8 @@ float ABaseCharacter::Attack(AActor * Target)
 	FDamageInfo DamageInfo;
 	DamageInfo.PhysicalDamage.Add(EDamageElement::None, 10.f);
 	FDamageInfo DealtDamageInfo;
-	float ActualDamage = AsBaseEntity->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
+	// SkillSet->UseSkill(ESkillSlot::Primary, this, AsBaseEntity, FVector());
+	// float ActualDamage = AsBaseEntity->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
 	return DealtDamageInfo.GetTotalDamage();
 }
 

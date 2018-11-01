@@ -12,6 +12,7 @@
 #include "Characters/Inventory.h"
 #include "Components/CharacterStats.h"
 #include "BaseEntity.h"
+#include "ActiveSkills/SkillSet.h"
 #include "BaseCharacter.generated.h"
 
 
@@ -43,12 +44,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		float GetAttackRange() const;
 
+	void SetAttackRange(float NewRange);
+
 	void ChangeZoom(int32 Change);
 
-	UFUNCTION(BlueprintCallable, Category = "General")
-		void FaceActor(AActor * Target);
-
 	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
+
+	bool UseSkill(ESkillSlot ToUse, ABaseEntity * Target, FVector TargetLocation);
+
+	bool UseCurrentSkill();
+
+	// bool UseSkill(UBaseSkill * ToUse, ABaseEntity * Target, FVector TargetLocation);
+
+	UBaseSkill * GetSkill(ESkillSlot Slot);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 		float Attack(AActor * Target);
@@ -77,6 +85,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "NPC")
 		float InteractRange = 200.f;
 
+	UPROPERTY(EditAnywhere, Category = "Skills")
+		TSubclassOf<UBaseSkill> BaseAttackSkillClass;
+
 	UPROPERTY(VisibleAnywhere)
 		USpringArmComponent * CameraBoom = nullptr;
 	UPROPERTY(VisibleAnywhere)
@@ -90,7 +101,15 @@ public: // no fucks given
 		UDetectionSphere * InteractRangeSphere = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UInventory * Backpack = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		USkillSet * SkillSet = nullptr;
 
+private:
 
+	ABaseEntity * TargetActor = nullptr;
+
+	FVector TargetLocation;
+
+	UBaseSkill * CurrentSkill = nullptr;
 
 };

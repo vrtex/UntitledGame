@@ -44,8 +44,6 @@ public:
 
 	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
 
-	UFUNCTION(BlueprintCallable, Category = "General")
-		void FaceActor(AActor * Target);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
 		float Attack(AActor * Target);

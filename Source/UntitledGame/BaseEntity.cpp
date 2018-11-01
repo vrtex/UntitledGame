@@ -53,6 +53,24 @@ ETeamRelation ABaseEntity::GetRelationTowards(uint8 OtherLabel) const
 	return ETeamRelation::Hostile;
 }
 
+void ABaseEntity::FaceActor(const AActor * Target)
+{
+	if(!Target)
+		return;
+	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(
+		GetActorLocation(),
+		Target->GetActorLocation()
+	);
+	TargetRotation.Roll = 0;
+	TargetRotation.Pitch = 0;
+	SetActorRotation(TargetRotation);
+}
+
+bool ABaseEntity::DealDamageBP_Implementation(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
+{
+	return DealDamage(Damage, DealtDamage, DamageDealer, Instigator);
+}
+
 bool ABaseEntity::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
 {
 	for(TPair<EDamageElement, float> PartialDamage : Damage.PhysicalDamage)

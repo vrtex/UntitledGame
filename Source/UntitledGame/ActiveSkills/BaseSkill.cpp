@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BaseSkill.h"
+#include "BaseEntity.h"
 
 
 // Sets default values for this component's properties
@@ -8,7 +9,7 @@ UBaseSkill::UBaseSkill()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
 }
@@ -22,11 +23,19 @@ void UBaseSkill::BeginPlay()
 	// ...
 }
 
-
-// Called every frame
-void UBaseSkill::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+bool UBaseSkill::Use_Implementation(ABaseEntity * User, ABaseEntity * Target, FVector TargetLocation)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	UE_LOG(LogTemp, Warning, TEXT("Actor %s tries to use base skill. This skill deas nothing. It's a bad idea"), *User->GetName());
+	return false;
+}
 
-	// ...
+
+float UBaseSkill::GetRange() const
+{
+	return Range;
+}
+
+float UBaseSkill::NeedsTarget() const
+{
+	return bNeedsTarget;
 }

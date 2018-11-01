@@ -26,6 +26,9 @@ public:
 
 	bool ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill);
 
+	bool UseSkill(ESkillSlot Slot, class ABaseEntity * User, class ABaseEntity * Target, const FVector & TargetLocation);
+
+	UBaseSkill * GetSkill(ESkillSlot Slot) const;
 private:
 	void AddSkills();
 
@@ -37,5 +40,4 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills")
 		TMap<ESkillSlot, UBaseSkill *> CurrentSkills;
-
 };

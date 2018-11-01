@@ -12,7 +12,7 @@
 #include "BaseEntity.generated.h"
 
 UCLASS()
-class UNTITLEDGAME_API ABaseEntity : public ACharacter//, public ITeamInterface
+class UNTITLEDGAME_API ABaseEntity : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -37,6 +37,14 @@ public:
 	virtual uint8 GetTeamLabel() const;
 
 	virtual ETeamRelation GetRelationTowards(uint8 OtherLabel) const;
+
+	UFUNCTION(BlueprintCallable, Category = "General")
+		void FaceActor(const AActor * Target);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+		bool DealDamageBP(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * DamageInstigator);
+
+	bool DealDamageBP_Implementation(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator);
 
 	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator);
 	
