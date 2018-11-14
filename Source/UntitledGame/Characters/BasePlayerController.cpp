@@ -40,7 +40,7 @@ void ABasePlayerController::Tick(float DeltaTime)
 
 	if(TargetActor)
 		MoveToActor(TargetActor);
-	else if(CurrentMovementType != EMovementTargetType::None)
+	else if(CurrentMovementType == EMovementTargetType::Ground)
 		// TODO: shouldn't this be Ground?
 		FollowCursor();
 
@@ -80,12 +80,21 @@ void ABasePlayerController::Possess(APawn* aPawn)
 		return;
 	}
 
-	ControlledCharacter->AttackRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABasePlayerController::EnemyDetected);
+	if(!ensure(ControlledCharacter->PickupRangeSphere && ControlledCharacter->InteractRangeSphere))
+	{
+		UE_LOG(LogTemp, Error, TEXT("No bubbles"));
+		FGenericPlatformMisc::RequestExit(false);
+		return;
+	}
+
+	// ControlledCharacter->AttackRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABasePlayerController::EnemyDetected);
 	ControlledCharacter->PickupRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABasePlayerController::ItemDetected);
 	ControlledCharacter->InteractRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABasePlayerController::NPCDetected);
 
 	InventoryWidget = Cast<UInventoryWidget>(CreateWidget(this, InventoryWidgetClass.Get(), FName("Inventory display")));
-	InventoryWidget->SetupInventory(ControlledCharacter->Backpack);
+	InventoryWidget->SetupInventory(ControlledCharacter);
+
+	SetupHUD();
 }
 
 void ABasePlayerController::OnLeftClick()
@@ -108,11 +117,11 @@ void ABasePlayerController::OnLeftClick()
 		if(!GetControlledCharacter()->GetItemsInRange().Contains(TargetActor))
 			break;
 		ItemDetected(nullptr, TargetActor, nullptr, 0, false, FHitResult());
-		// GetControlledCharacter()->Pickup(Cast<APickupItem>(TargetActor));
 		ClearMovementTarget();
 		break;
 	case EMovementTargetType::Enemy:
-		GetControlledCharacter()->UseSkill(ESkillSlot::Primary, Cast<ABaseEntity>(TargetActor), Hit.ImpactPoint);
+		UE_LOG(LogTemp, Warning, TEXT("Has Target: %d"), Cast<ABaseEntity>(Hit.GetActor()) ? 1 : 0);
+		GetControlledCharacter()->UseSkill(ESkillSlot::Primary, Cast<ABaseEntity>(Hit.GetActor()), Hit.ImpactPoint);
 		if(!GetControlledCharacter()->GetEnemiesInRange().Contains(TargetActor))
 			break;
 		//EnemyDetected(nullptr, TargetActor, nullptr, 0, false, FHitResult());
@@ -140,7 +149,7 @@ void ABasePlayerController::UseAlternateSkill()
 {
 	FHitResult Hit;
 	EMovementTargetType MoveType = GetIntendedTargetType(Hit);
-	if(MoveType != EMovementTargetType::Enemy)
+	if(MoveType != EMovementTargetType::Enemy && MoveType != EMovementTargetType::Ground)
 		return;
 	GetControlledCharacter()->UseSkill(ESkillSlot::Secondary, Cast<ABaseEntity>(Hit.GetActor()), Hit.ImpactPoint);
 }
@@ -178,7 +187,7 @@ void ABasePlayerController::OpenShop(UUserWidget * ShopWidget, ABaseNPC * ShopOw
 	// TODO: shopping
 }
 
-ABaseCharacter * ABasePlayerController::GetControlledCharacter()
+ABaseCharacter * ABasePlayerController::GetControlledCharacter() const
 {
 	return ControlledCharacter;
 }
@@ -203,6 +212,8 @@ void ABasePlayerController::EnemyDetected(UPrimitiveComponent * OverlappedCompon
 void ABasePlayerController::ItemDetected(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	APickupItem * AsPickupItem = Cast<APickupItem>(OtherActor);
+	if(!IsValid(AsPickupItem))
+		return;
 	bool bIsMoney = AsPickupItem->GetHeldItem().ItemType == EItemType::Money || AsPickupItem->GetHeldItem().ItemType == EItemType::RareMoney;
 	if(CurrentMovementType != EMovementTargetType::Item && !bIsMoney)
 		return;
@@ -257,7 +268,7 @@ void ABasePlayerController::SetMovementTarget(EMovementTargetType MoveType, AAct
 			return;
 		}
 
-		TargetActor = NewTargetActor;
+		// TargetActor = NewTargetActor;
 		break;
 	case EMovementTargetType::NPC:
 		if(!Cast<ABaseNPC>(NewTargetActor))

@@ -29,6 +29,15 @@ bool UBaseSkill::Use_Implementation(ABaseEntity * User, ABaseEntity * Target, FV
 	return false;
 }
 
+void UBaseSkill::Cancel_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Skill %s has no cancel implementation or it's a base skill."), *GetName());
+}
+
+UTexture2D * UBaseSkill::GetSkillIcon() const
+{
+	return SkillIcon;
+}
 
 float UBaseSkill::GetRange() const
 {

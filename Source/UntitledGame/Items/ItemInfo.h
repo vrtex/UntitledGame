@@ -13,6 +13,7 @@
 UENUM(BlueprintType)
 enum class EItemType : uint8
 {
+	// After changing: update static getter in FItemInfo
 	None,
 	Money,
 	RareMoney,
@@ -30,6 +31,12 @@ USTRUCT(BlueprintType, Blueprintable)
 struct FItemInfo
 {
 	GENERATED_BODY()
+
+	static TArray<EItemType> GetAllItemTypes();
+	
+	static TArray<EItemType> GetEqItemTypes();
+
+	static FItemInfo GetEmptyItem();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EItemType ItemType = EItemType::None;

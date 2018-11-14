@@ -10,9 +10,9 @@
 #include "Items/ItemInfo.h"
 #include "Interfaces/TeamInterface.h"
 #include "Characters/Inventory.h"
+#include "Components/Equipment.h"
 #include "Components/CharacterStats.h"
 #include "BaseEntity.h"
-#include "ActiveSkills/SkillSet.h"
 #include "BaseCharacter.generated.h"
 
 
@@ -41,27 +41,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		float GetPickupRange() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Items")
-		float GetAttackRange() const;
-
-	void SetAttackRange(float NewRange);
 
 	void ChangeZoom(int32 Change);
 
-	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
-
-	bool UseSkill(ESkillSlot ToUse, ABaseEntity * Target, FVector TargetLocation);
+	virtual bool ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
 
 	bool UseCurrentSkill();
 
 	// bool UseSkill(UBaseSkill * ToUse, ABaseEntity * Target, FVector TargetLocation);
 
-	UBaseSkill * GetSkill(ESkillSlot Slot);
-
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 		float Attack(AActor * Target);
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-		TArray<AActor *> GetEnemiesInRange() const;
 
 	UFUNCTION(BlueprintCallable, Category = "NPC")
 		bool InteractWith(class ABaseNPC * NPC);
@@ -85,16 +75,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "NPC")
 		float InteractRange = 200.f;
 
-	UPROPERTY(EditAnywhere, Category = "Skills")
-		TSubclassOf<UBaseSkill> BaseAttackSkillClass;
-
 	UPROPERTY(VisibleAnywhere)
 		USpringArmComponent * CameraBoom = nullptr;
 	UPROPERTY(VisibleAnywhere)
 		UCameraComponent * Camera = nullptr;
 public: // no fucks given
-	UPROPERTY(VisibleAnywhere)
-		UDetectionSphere * AttackRangeSphere = nullptr;
 	UPROPERTY(VisibleAnywhere)
 		UDetectionSphere * PickupRangeSphere = nullptr;
 	UPROPERTY(VisibleAnywhere)
@@ -102,14 +87,10 @@ public: // no fucks given
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UInventory * Backpack = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		USkillSet * SkillSet = nullptr;
+		UEquipment * Equipment = nullptr;
 
 private:
 
-	ABaseEntity * TargetActor = nullptr;
 
-	FVector TargetLocation;
-
-	UBaseSkill * CurrentSkill = nullptr;
 
 };

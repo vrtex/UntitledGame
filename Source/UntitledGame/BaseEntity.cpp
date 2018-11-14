@@ -9,15 +9,29 @@ ABaseEntity::ABaseEntity()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+
 	CharacterStats = CreateDefaultSubobject<UCharacterStats>(FName("Character Stats"));
 	Health = CreateDefaultSubobject<UHealthComponent>(FName("Health component"));
+	Mana = CreateDefaultSubobject<UManaComponent>(FName("Mana component"));
+	SkillSet = CreateDefaultSubobject<USkillSet>(FName("Skill set"));
 }
 
 // Called when the game starts or when spawned
 void ABaseEntity::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if(BaseAttackSkillClass.Get() && SkillSet)
+		SkillSet->ChangeSkill(ESkillSlot::Primary, BaseAttackSkillClass);
+	else
+	{
+		if(!SkillSet)
+		{
+			UE_LOG(LogTemp, Error, TEXT("No skill set"));
+		}
+
+		UE_LOG(LogTemp, Error, TEXT("%s has no basic attack. No hands"), *GetName());
+	}
+	OnStatsChange();
 }
 
 // Called every frame
@@ -53,6 +67,37 @@ ETeamRelation ABaseEntity::GetRelationTowards(uint8 OtherLabel) const
 	return ETeamRelation::Hostile;
 }
 
+TArray<AActor*> ABaseEntity::GetEnemiesInRange() const
+{
+	TArray<AActor*> Enemies;
+	if(GetAttackRange() < 0.1f)
+		return Enemies;
+	TArray<AActor*> Temp;
+
+	UGameplayStatics::GetAllActorsOfClass(this, ABaseEntity::StaticClass(), Temp);
+
+	for(auto E : Temp)
+	{
+		ABaseEntity * AsBaseEntity = Cast<ABaseEntity>(E);
+		if(!AsBaseEntity || GetRelationTowards(AsBaseEntity->GetTeamLabel()) != ETeamRelation::Hostile)
+			continue;
+		if(FVector::Dist(E->GetActorLocation(), GetActorLocation()) > GetAttackRange())
+			continue;
+		Enemies.Add(E);
+	}
+	return Enemies;
+}
+
+float ABaseEntity::GetAttackRange() const
+{
+	return CurrentSkill ? CurrentSkill->GetRange() : 0.f;
+}
+
+void ABaseEntity::SetAttackRange(float NewRange)
+{
+	return;
+}
+
 void ABaseEntity::FaceActor(const AActor * Target)
 {
 	if(!Target)
@@ -66,13 +111,14 @@ void ABaseEntity::FaceActor(const AActor * Target)
 	SetActorRotation(TargetRotation);
 }
 
-bool ABaseEntity::DealDamageBP_Implementation(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
+bool ABaseEntity::ReceiveDamageBP_Implementation(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
 {
-	return DealDamage(Damage, DealtDamage, DamageDealer, Instigator);
+	return ReceiveDamage(Damage, DealtDamage, DamageDealer, Instigator);
 }
 
-bool ABaseEntity::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
+bool ABaseEntity::ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
 {
+	
 	for(TPair<EDamageElement, float> PartialDamage : Damage.PhysicalDamage)
 	{
 		float ThisElement = PartialDamage.Value * (1.f - GetResistTo(PartialDamage.Key, EDamageType::Physical));
@@ -84,8 +130,95 @@ bool ABaseEntity::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDama
 		float ThisElement = PartialDamage.Value * (1.f - GetResistTo(PartialDamage.Key, EDamageType::Magical));
 		DealtDamage.MagicDamage[PartialDamage.Key] = ThisElement;
 	}
-	Health->Remove(DealtDamage);
+	if(GetHealth() < DealtDamage.GetTotalDamage())
+		DealtDamage.Scale(DealtDamage.GetTotalDamage() / GetHealth());
+	Health->Remove(DealtDamage.GetTotalDamage());
 	return !FMath::IsNearlyEqual(0.f, DealtDamage.GetTotalDamage());
+}
+
+bool ABaseEntity::DealDamageToBP_Implementation(ABaseEntity * Target, const FDamageInfo & Damage, FDamageInfo & DealtDamage)
+{
+	return DealDamageTo(Target, Damage, DealtDamage);
+}
+
+bool ABaseEntity::DealDamageTo(ABaseEntity * Target, const FDamageInfo & Damage, FDamageInfo & DealtDamage)
+{
+	if(!Target)
+		return false;
+	return Target->ReceiveDamage(Damage, DealtDamage, this, GetController());
+}
+
+float ABaseEntity::RestoreHealthBP_Implementation(const float ToRestore, ABaseEntity * Healer)
+{
+	return RestoreHealth(ToRestore, Healer);
+}
+
+float ABaseEntity::RestoreHealth(const float ToRestore, ABaseEntity * Healer)
+{
+	return Health ? Health->Restore(ToRestore) : 0.f;
+}
+
+float ABaseEntity::RemoveManaBP_Implementation(float ToRemove)
+{
+	return RemoveMana(ToRemove);
+}
+
+float ABaseEntity::RemoveMana(float ToRemove)
+{
+	return Mana ? Mana->Remove(ToRemove) : 0.f;
+}
+
+float ABaseEntity::RestoreManaBP_Implementation(float ToRestore)
+{
+	return RestoreMana(ToRestore);
+}
+
+float ABaseEntity::RestoreMana(float ToRestore)
+{
+	return Mana ? Mana->Restore(ToRestore) : 0.f;
+}
+
+void ABaseEntity::OnStatsChange()
+{
+	if(!CharacterStats)
+		return;
+	if(Health)
+	{
+		Health->ChangeMax(CharacterStats->GetMaxHealth());
+	}
+	if(Mana)
+	{
+		Mana->ChangeMax(CharacterStats->GetMaxMana());
+	}
+}
+
+bool ABaseEntity::UseSkill(ESkillSlot ToUse, ABaseEntity * Target, FVector Location)
+{
+	UBaseSkill * NewSkill = GetSkill(ToUse);
+	if(!NewSkill)
+		return false;
+	if(CurrentSkill != NewSkill && CurrentSkill)
+		CurrentSkill->Cancel();
+	
+	CurrentSkill = NewSkill;
+	SetAttackRange(CurrentSkill->GetRange());
+	TargetActor = Target;
+	TargetLocation = Location;
+	return CurrentSkill->Use(this, Target, TargetLocation);
+}
+
+UBaseSkill * ABaseEntity::GetSkill(ESkillSlot Slot)
+{
+	if(!SkillSet)
+		return nullptr;
+	return SkillSet->GetSkill(Slot);
+}
+
+void ABaseEntity::CancelCurrentSkill()
+{
+	if(!CurrentSkill)
+		return;
+	CurrentSkill->Cancel();
 }
 
 float ABaseEntity::GetResistTo(EDamageElement Element, EDamageType Type) const
@@ -109,6 +242,20 @@ float ABaseEntity::GetHealthPercentage() const
 	return Health ? Health->GetPercentage() : 0.f;
 }
 
+float ABaseEntity::GetMana() const
+{
+	return Mana ? Mana->Get() : 0.f;
+}
+
+float ABaseEntity::GetMaxMana() const
+{
+	return Mana ? Mana->GetMax() : 0.f;
+}
+
+float ABaseEntity::GetManaPercentage() const
+{
+	return Mana ? Mana->GetPercentage() : 0.f;
+}
 
 bool ABaseEntity::IsDead() const
 {

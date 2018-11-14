@@ -40,6 +40,14 @@ public:
 		
 	virtual bool Use_Implementation(class ABaseEntity * User, class ABaseEntity * Target, FVector TargetLocation);
 
+	UFUNCTION(BlueprintNativeEvent, Category = "Skills")
+		void Cancel();
+
+	virtual void Cancel_Implementation();
+
+	UFUNCTION(BlueprintPure, Category = "Skills")
+		UTexture2D * GetSkillIcon() const;
+
 	UFUNCTION(BlueprintPure, Category = "Skills")
 		float GetRange() const;
 
@@ -53,5 +61,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
 		bool bNeedsTarget = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Setup")
+		UTexture2D * SkillIcon = nullptr;
+
+	class ABaseEntity * CurrentUser = nullptr;
+
 
 };

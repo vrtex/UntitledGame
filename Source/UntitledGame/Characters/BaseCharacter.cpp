@@ -33,10 +33,6 @@ ABaseCharacter::ABaseCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(FName("Camera"));
 	Camera->SetupAttachment(CameraBoom);
 
-	AttackRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Attack Range Sphere"));
-	AttackRangeSphere->SetupAttachment(RootComponent);
-	AttackRangeSphere->SetSphereRadius(AttackRange);
-
 	PickupRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Pickup Range Sphere"));
 	PickupRangeSphere->SetupAttachment(RootComponent);
 	PickupRangeSphere->SetSphereRadius(ItemPickupRange);
@@ -47,24 +43,19 @@ ABaseCharacter::ABaseCharacter()
 
 	
 	Backpack = CreateDefaultSubobject<UInventory>(FName("Backpack"));
-	SkillSet = CreateDefaultSubobject<USkillSet>(FName("Skill set"));
+	Equipment = CreateDefaultSubobject<UEquipment>(FName("Equipment"));
 }
 
 // Called when the game starts or when spawned
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AttackRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Damagable);
-	AttackRangeSphere->SetSphereRadius(AttackRange);
 	PickupRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Item);
 	PickupRangeSphere->SetSphereRadius(ItemPickupRange);
 	InteractRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_NPC);
 	InteractRangeSphere->SetSphereRadius(InteractRange);
-	if(BaseAttackSkillClass.Get())
-		SkillSet->ChangeSkill(ESkillSlot::Primary, BaseAttackSkillClass);
 
-	SetTeamLabel(1);
+	SetTeamLabel(GenericPlayerTeam);
 }
 
 // Called every frame
@@ -86,17 +77,6 @@ float ABaseCharacter::GetPickupRange() const
 	return ItemPickupRange;
 }
 
-float ABaseCharacter::GetAttackRange() const
-{
-	return AttackRangeSphere->GetScaledSphereRadius();
-}
-
-void ABaseCharacter::SetAttackRange(float NewRange)
-{
-	AttackRangeSphere->SetSphereRadius(NewRange);
-	AttackRange = NewRange;
-}
-
 void ABaseCharacter::ChangeZoom(int32 Change)
 {
 	float NewLength = FMath::Clamp<float>(CameraBoom->TargetArmLength + (float)Change, 300, 1000);
@@ -104,22 +84,10 @@ void ABaseCharacter::ChangeZoom(int32 Change)
 }
 
 
-bool ABaseCharacter::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
+bool ABaseCharacter::ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
 {
-	float TotalDamage = Super::DealDamage(Damage, DealtDamage, DamageDealer, Instigator);
+	float TotalDamage = Super::ReceiveDamage(Damage, DealtDamage, DamageDealer, Instigator);
 	return TotalDamage;
-}
-
-bool ABaseCharacter::UseSkill(ESkillSlot Slot, ABaseEntity * Target, FVector Location)
-{
-	CurrentSkill = GetSkill(Slot);
-	if(!CurrentSkill)
-		return false;
-	TargetActor = Target;
-	TargetLocation = Location;
-	SetAttackRange(CurrentSkill->GetRange());
-	bool bUsedSkill = CurrentSkill->Use(this, TargetActor, TargetLocation);
-	return bUsedSkill;
 }
 
 bool ABaseCharacter::UseCurrentSkill()
@@ -127,11 +95,6 @@ bool ABaseCharacter::UseCurrentSkill()
 	if(!CurrentSkill)
 		return false;
 	return CurrentSkill->Use(this, TargetActor, TargetLocation);
-}
-
-UBaseSkill * ABaseCharacter::GetSkill(ESkillSlot Slot)
-{
-	return SkillSet->GetSkill(Slot);
 }
 
 float ABaseCharacter::Attack(AActor * Target)
@@ -148,8 +111,7 @@ float ABaseCharacter::Attack(AActor * Target)
 	FDamageInfo DamageInfo;
 	DamageInfo.PhysicalDamage.Add(EDamageElement::None, 10.f);
 	FDamageInfo DealtDamageInfo;
-	// SkillSet->UseSkill(ESkillSlot::Primary, this, AsBaseEntity, FVector());
-	// float ActualDamage = AsBaseEntity->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
+	// float ActualDamage = AsBaseEntity->ReceiveDamage(DamageInfo, DealtDamageInfo, this, GetController());
 	return DealtDamageInfo.GetTotalDamage();
 }
 
@@ -188,13 +150,6 @@ bool ABaseCharacter::InteractWith(ABaseNPC * Target)
 	FaceActor(NPC);
 	NPC->Interact(GetController(), this);
 	return true;
-}
-
-TArray<AActor*> ABaseCharacter::GetEnemiesInRange() const
-{
-	TArray<AActor*> Enemies;
-	AttackRangeSphere->GetOverlappingActors(Enemies);
-	return Enemies;
 }
 
 TArray<AActor*> ABaseCharacter::GetItemsInRange() const

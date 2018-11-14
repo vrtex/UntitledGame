@@ -23,6 +23,8 @@
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "Runtime/Engine/Classes/GameFramework/Character.h"
 #include "Runtime/Engine/Classes/Components/ChildActorComponent.h"
+#include "Runtime/Engine/Classes/GameFramework/ProjectileMovementComponent.h"
+#include "Runtime/Engine/Public/TimerManager.h"
 
 
 

@@ -8,6 +8,7 @@
 #include "Includes.h"
 #include "SkillSet.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSkillSetFelegate);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNTITLEDGAME_API USkillSet : public UActorComponent
@@ -24,11 +25,18 @@ protected:
 
 public:	
 
+	FSkillSetFelegate OnChange;
+
 	bool ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill);
 
 	bool UseSkill(ESkillSlot Slot, class ABaseEntity * User, class ABaseEntity * Target, const FVector & TargetLocation);
 
-	UBaseSkill * GetSkill(ESkillSlot Slot) const;
+	UFUNCTION(BlueprintPure, Category = "Skills")
+		UBaseSkill * GetSkill(ESkillSlot Slot) const;
+
+	UFUNCTION(BlueprintPure, Category = "Skills")
+		const TMap<ESkillSlot, UBaseSkill *> & GetCurrentSkills();
+
 private:
 	void AddSkills();
 

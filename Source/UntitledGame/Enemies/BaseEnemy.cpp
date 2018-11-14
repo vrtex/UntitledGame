@@ -13,14 +13,13 @@ ABaseEnemy::ABaseEnemy()
 
 	GetCapsuleComponent()->SetCollisionProfileName(DamagableCollisionPreset);
 
-	AttackRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Attack Range Sphere"));
-	AttackRangeSphere->SetupAttachment(GetRootComponent());
-
 	NoticeRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Notice Range Sphere"));
 	NoticeRangeSphere->SetupAttachment(GetRootComponent());
+	NoticeRangeSphere->bHiddenInGame = false;
 
 	ForgetRangeSphere = CreateDefaultSubobject<UDetectionSphere>(FName("Forget Range Sphere"));
 	ForgetRangeSphere->SetupAttachment(GetRootComponent());
+	ForgetRangeSphere->bHiddenInGame = false;
 
 }
 
@@ -28,17 +27,21 @@ ABaseEnemy::ABaseEnemy()
 void ABaseEnemy::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	GetMesh()->bRenderCustomDepth = true;
 
-	AttackRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Damagable);
+
 	NoticeRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Damagable);
 	ForgetRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_Damagable);
-	AttackRangeSphere->SetSphereRadius(AttackRange);
+	NoticeRangeSphere->SetHiddenInGame(false);
+	ForgetRangeSphere->SetHiddenInGame(false);
+
+	
+	GetMesh()->bRenderCustomDepth = true;
+	SetAttackRange(AttackRange);
+	//AttackRangeSphere->SetSphereRadius(AttackRange);
 	NoticeRangeSphere->SetSphereRadius(NoticeRange);
 	ForgetRangeSphere->SetSphereRadius(ForgetRange);
 
-	SetTeamLabel(2);
+	SetTeamLabel(GenericEnemyTeam);
 	//GetCapsuleComponent()->SetCollisionProfileName(EnemyCollisionPreset);
 	/*
 	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_Enemy);
@@ -69,9 +72,9 @@ FText ABaseEnemy::GetInteractableName_Implementation() const
 	return DisplayName;
 }
 
-bool ABaseEnemy::DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
+bool ABaseEnemy::ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
 {
-	bool bDealtSomething = Super::DealDamage(Damage, DealtDamage, DamageDealer, Instigator);
+	bool bDealtSomething = Super::ReceiveDamage(Damage, DealtDamage, DamageDealer, Instigator);
 	if(IsDead())
 		Destroy();
 	return bDealtSomething;
@@ -92,24 +95,7 @@ float ABaseEnemy::Attack(AActor * Target)
 	DamageInfo.PhysicalDamage[EDamageElement::Fire] = 10;
 	FDamageInfo DealtDamageInfo;
 
-	AsBaseEntity->DealDamage(DamageInfo, DealtDamageInfo, this, GetController());
+	AsBaseEntity->ReceiveDamage(DamageInfo, DealtDamageInfo, this, GetController());
 
 	return 0.0f;
-}
-
-TArray<AActor*> ABaseEnemy::GetEnemiesInRange() const
-{
-	TArray<AActor *> Enemies;
-	NoticeRangeSphere->GetOverlappingActors(Enemies);
-	for(int32 i = Enemies.Num() - 1; i >= 0; --i)
-	{
-		AActor * Current = Enemies[i];
-		ABaseEntity * AsTeamAgent = Cast<ABaseEntity>(Current);
-		if((!AsTeamAgent) || 
-			GetRelationTowards(AsTeamAgent->GetTeamLabel()) != ETeamRelation::Hostile)
-		{
-			Enemies.RemoveAt(i);
-		}
-	}
-	return Enemies;
 }

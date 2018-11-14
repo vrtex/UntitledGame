@@ -35,6 +35,28 @@ void UCharacterStats::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	// ...
 }
 
+void UCharacterStats::SetMaxHealth(float NewMax)
+{
+	MaxHealth = FMath::Max<float>(0.f, NewMax);
+	OnChange.Broadcast();
+}
+
+float UCharacterStats::GetMaxHealth() const
+{
+	return MaxHealth;
+}
+
+void UCharacterStats::SetMaxMana(float NewMax)
+{
+	MaxMana = FMath::Max<float>(0.f, NewMax);
+	OnChange.Broadcast();
+}
+
+float UCharacterStats::GetMaxMana() const
+{
+	return MaxMana;
+}
+
 float UCharacterStats::GetResistTo(EDamageElement Element) const
 {
 	if(!ElementalResists.Contains(Element))
@@ -52,4 +74,10 @@ float UCharacterStats::GetResistTo(EDamageElement Element) const
 		return 0.f;
 	}
 	return ElementalResists[Element];
+}
+
+void UCharacterStats::SetResistTo(EDamageElement Element, float NewValue)
+{
+	ElementalResists[Element] = NewValue;
+	OnChange.Broadcast();
 }

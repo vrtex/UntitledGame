@@ -52,8 +52,8 @@ class UNTITLEDGAME_API ABasePlayerController : public APlayerController
 	UFUNCTION(BlueprintCallable, Category = "Input")
 		void OpenShop(UUserWidget * ShopWidget, ABaseNPC * ShopOwner);
 
-	UFUNCTION(BlueprintCallable, Category = "Character")
-		ABaseCharacter * GetControlledCharacter();
+	UFUNCTION(BlueprintPure, Category = "Character")
+		ABaseCharacter * GetControlledCharacter() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 		void EnemyDetected(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
@@ -64,8 +64,10 @@ class UNTITLEDGAME_API ABasePlayerController : public APlayerController
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 		void NPCDetected(UPrimitiveComponent * OverlappedComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
-
 protected:
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+		void SetupHUD();
+
 	UPROPERTY(EditAnywhere, Category = "Setup")
 		int32 ZoomChangeSensitivity = 50;
 

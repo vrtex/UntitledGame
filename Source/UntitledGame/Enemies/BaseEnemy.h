@@ -42,31 +42,26 @@ public:
 
 	virtual FText GetInteractableName_Implementation() const;
 
-	virtual bool DealDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
+	virtual bool ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
 
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
 		float Attack(AActor * Target);
 
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-		TArray<AActor *> GetEnemiesInRange() const;
 
 public: // fucks given: 0
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Setup")
-		UDetectionSphere * AttackRangeSphere = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup")
 		float AttackRange = 100.f;
 
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Setup")
+	UPROPERTY(VisibleAnywhere)
 		UDetectionSphere * NoticeRangeSphere = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup")
 		float NoticeRange = 100.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Setup")
+	UPROPERTY(VisibleAnywhere)
 		UDetectionSphere * ForgetRangeSphere = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup")
@@ -75,10 +70,6 @@ public: // fucks given: 0
 
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "Combat|Setup")
-		float MaxHealth = 100.f;
-	UPROPERTY(EditAnywhere, Category = "Combat")
-		float CurrentHealth = MaxHealth;
 	UPROPERTY(EditAnywhere, Category = "Setup|UI")
 		FText DisplayName;
 

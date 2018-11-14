@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/ScalarResource.h"
 #include "Interfaces/DamageInfo.h"
 #include "HealthComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UNTITLEDGAME_API UHealthComponent : public UActorComponent
+class UNTITLEDGAME_API UHealthComponent : public UScalarResource
 {
 	GENERATED_BODY()
 
@@ -23,21 +24,9 @@ protected:
 
 public:	
 
-	float Get() const;
-
-	float GetMax() const;
-
-	float GetPercentage() const;
-
-	bool Remove(FDamageInfo & Damage);
-
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-private:
-	UPROPERTY(EditAnywhere, Category = "Setup")
-		float MaxHealth = 100.f;
-	UPROPERTY(EditAnywhere, Category = "Combat")
-		float CurrentHealth = MaxHealth;
-	
+
+
 };

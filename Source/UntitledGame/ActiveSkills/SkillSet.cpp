@@ -46,6 +46,7 @@ bool USkillSet::ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill)
 		CurrentSkills.Add(Slot, nullptr);
 
 	CurrentSkills[Slot] = CreatedSkill;
+	OnChange.Broadcast();
 	return true;
 }
 
@@ -57,6 +58,11 @@ bool USkillSet::UseSkill(ESkillSlot Slot, ABaseEntity * User, ABaseEntity * Targ
 UBaseSkill * USkillSet::GetSkill(ESkillSlot Slot) const
 {
 	return CurrentSkills.Contains(Slot) ? CurrentSkills[Slot] : nullptr;
+}
+
+const TMap<ESkillSlot, UBaseSkill*>& USkillSet::GetCurrentSkills()
+{
+	return CurrentSkills;
 }
 
 void USkillSet::AddSkills()

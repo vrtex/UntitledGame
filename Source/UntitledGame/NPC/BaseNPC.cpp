@@ -42,7 +42,8 @@ bool ABaseNPC::Interact(AController * InstigatorController, APawn * InstigatorPa
 	// TODO: khajit
 	UE_LOG(LogTemp, Warning, TEXT("Khajit has wares if you have a coin"));
 	ShopContent->PrintItems();
-	OpenShopDelegate.Broadcast(ShopWidget, this);
+	if(ShopWidget)
+		OpenShopDelegate.Broadcast(ShopWidget, this);
 	ShowShopWidget();
 	return false;
 }
@@ -61,7 +62,6 @@ void ABaseNPC::ShowShopWidget(bool bShow)
 {
 	if(!ShopWidget)
 	{
-
 		UE_LOG(LogTemp, Warning, TEXT("no shop"));
 		return;
 	}

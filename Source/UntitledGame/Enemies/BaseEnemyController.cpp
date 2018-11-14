@@ -62,8 +62,8 @@ void ABaseEnemyController::Possess(APawn * aPawn)
 		return;
 	}
 
-	Controlled->AttackRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABaseEnemyController::EnemyInRange);
-	Controlled->AttackRangeSphere->OnComponentEndOverlap.AddDynamic(this, &ABaseEnemyController::EnemyOutOfRange);
+	// Controlled->AttackRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABaseEnemyController::EnemyInRange);
+	// Controlled->AttackRangeSphere->OnComponentEndOverlap.AddDynamic(this, &ABaseEnemyController::EnemyOutOfRange);
 	Controlled->NoticeRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABaseEnemyController::EnemyDetected);
 	Controlled->ForgetRangeSphere->OnComponentEndOverlap.AddDynamic(this, &ABaseEnemyController::ForgetEnemy);
 
