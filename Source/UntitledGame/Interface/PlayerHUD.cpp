@@ -14,6 +14,4 @@ void UPlayerHUD::Setup_Implementation(ABaseCharacter * Character)
 	}
 
 	PlayerChar = Character;
-
-	PlayerChar->SkillSet->OnChange.AddDynamic(this, &UPlayerHUD::UpdateSkillbar);
 }

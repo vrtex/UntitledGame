@@ -10,6 +10,8 @@
 #include "Interfaces/TeamInterface.h"
 #include "Components/DetectionSphere.h"
 #include "BaseEntity.h"
+#include "Components/DropTable.h"
+#include "Characters/Inventory.h"
 #include "BaseEnemy.generated.h"
 
 UCLASS()
@@ -44,7 +46,6 @@ public:
 
 	virtual bool ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
 
-
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
 		float Attack(AActor * Target);
 
@@ -67,10 +68,18 @@ public: // fucks given: 0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setup")
 		float ForgetRange = 100.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Items")
+		UDropTable * DropTable = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Items")
+		UInventory * DropInventory = nullptr;
 
 protected:
 
+	virtual void Die();
+
 	UPROPERTY(EditAnywhere, Category = "Setup|UI")
 		FText DisplayName;
+private:
 
 };

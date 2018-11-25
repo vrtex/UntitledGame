@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SkillSet.h"
+#include "Items/ItemInfo.h"
+#include "Components/Equipment.h"
 
 
 // Sets default values for this component's properties
@@ -22,12 +24,52 @@ void USkillSet::BeginPlay()
 	AddSkills();
 }
 
-bool USkillSet::ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill)
+ESkillSlot USkillSet::MapToSkill(EItemType Item)
+{
+	switch(Item)
+	{
+	case EItemType::None:
+	case EItemType::Money:
+	case EItemType::RareMoney:
+	case EItemType::Consumable:
+	case EItemType::Other:
+		break;
+	case EItemType::WeaponModifier:
+		return ESkillSlot::Primary;
+	case EItemType::ShieldGenerator:
+		return ESkillSlot::Secondary;
+		break;
+	case EItemType::Gloves:
+		break;
+	case EItemType::Boots:
+		break;
+	case EItemType::Implant:
+		break;
+	case EItemType::Relic:
+		break;
+		break;
+		break;
+	default:
+		UE_LOG(LogTemp, Error, TEXT("USkillSet::MapToSkill trying to map unknown item"));
+		break;
+	}
+	return ESkillSlot::None;
+}
+
+void USkillSet::SetDefaultAttack(TSubclassOf<UBaseSkill> Default)
+{
+	if(!Default.Get())
+		return;
+
+	DefaultBasicAttack = Default;
+}
+
+bool USkillSet::ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill, bool bSendDelegate)
 {
 	if(!NewSkill.Get())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Trying to set skill to none on actor %s"), *GetOwner()->GetName());
-		return false;
+		ClearSkill(Slot);
+		return true;
 	}
 
 	UBaseSkill * CreatedSkill = NewObject<UBaseSkill>(this, NewSkill.Get());
@@ -46,13 +88,47 @@ bool USkillSet::ChangeSkill(ESkillSlot Slot, TSubclassOf<UBaseSkill> NewSkill)
 		CurrentSkills.Add(Slot, nullptr);
 
 	CurrentSkills[Slot] = CreatedSkill;
-	OnChange.Broadcast();
+
+	if(bSendDelegate)
+		OnChange.Broadcast();
 	return true;
+}
+
+void USkillSet::ClearSkill(ESkillSlot Slot, bool bSendDelegate)
+{
+	if(CurrentSkills.Contains(Slot) && IsValid(CurrentSkills[Slot]))
+		CurrentSkills[Slot]->DestroyComponent();
+	if(!CurrentSkills.Contains(Slot))
+		CurrentSkills.Add(Slot, nullptr);
+	else
+		CurrentSkills[Slot] = nullptr;
+
+	if(Slot == ESkillSlot::Primary && DefaultBasicAttack.Get())
+	{
+		if(DefaultBasicAttack.Get())
+		{
+			UBaseSkill * DefaultReplacement = NewObject<UBaseSkill>(this, DefaultBasicAttack.Get());
+			DefaultReplacement->RegisterComponent();
+			CurrentSkills[Slot] = DefaultReplacement;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("%s removed basic attack and has no replacement"));
+		}
+	}
+
+	if(bSendDelegate)
+		OnChange.Broadcast();
 }
 
 bool USkillSet::UseSkill(ESkillSlot Slot, ABaseEntity * User, ABaseEntity * Target, const FVector & TargetLocation)
 {
 	return GetSkill(Slot) ? GetSkill(Slot)->Use(User, Target, TargetLocation) : false;
+}
+
+bool USkillSet::HasSkill(ESkillSlot Slot) const
+{
+	return CurrentSkills.Contains(Slot) && IsValid(CurrentSkills[Slot]);
 }
 
 UBaseSkill * USkillSet::GetSkill(ESkillSlot Slot) const
@@ -63,6 +139,15 @@ UBaseSkill * USkillSet::GetSkill(ESkillSlot Slot) const
 const TMap<ESkillSlot, UBaseSkill*>& USkillSet::GetCurrentSkills()
 {
 	return CurrentSkills;
+}
+
+void USkillSet::AttachEquipment(UEquipment * Eq)
+{
+	if(!IsValid(Eq))
+		return;
+
+	ObservedEq = Eq;
+	ObservedEq->OnChange.AddDynamic(this, &USkillSet::UpdateFromEqupiment);
 }
 
 void USkillSet::AddSkills()
@@ -77,19 +162,30 @@ void USkillSet::AddSkills()
 		}
 		++SkillNumber;
 	}
-	/*
-	if(PrimarySkillClass.Get())
+
+	OnChange.Broadcast();
+}
+
+void USkillSet::UpdateFromEqupiment()
+{
+	if(!ObservedEq)
+		return;
+	for(EItemType Item : FItemInfo::GetEqItemTypes())
 	{
-		PrimarySkill = NewObject<UBaseSkill>(this, PrimarySkillClass.Get());
-		PrimarySkill->RegisterComponent();
+		ESkillSlot CurrentSlot = USkillSet::MapToSkill(Item);
+		if(CurrentSlot == ESkillSlot::None)
+			continue;
+		if(ObservedEq->HasItem(Item))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Has Item"));
+			ChangeSkill(CurrentSlot, ObservedEq->GetItem(Item).GrantedSkill, false);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("No Item"));
+
+			ClearSkill(CurrentSlot, false);
+		}
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("No primary skill class"));
-	}
-	if(!PrimarySkill)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Can't create skill"));
-	}
-	*/
+	OnChange.Broadcast();
 }

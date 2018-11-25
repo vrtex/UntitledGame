@@ -55,7 +55,29 @@ void ABaseCharacter::BeginPlay()
 	InteractRangeSphere->SetDetectedChannel(ECollisionChannel::ECC_NPC);
 	InteractRangeSphere->SetSphereRadius(InteractRange);
 
+	Equipment->AttachInventory(Backpack);
+	Equipment->AttachStats(GetStats());
+
+	SkillSet->AttachEquipment(Equipment);
+
 	SetTeamLabel(GenericPlayerTeam);
+}
+
+void ABaseCharacter::RecreateBubles()
+{
+	if(!PickupRangeSphere)
+	{
+		PickupRangeSphere = NewObject<UDetectionSphere>(this, UDetectionSphere::StaticClass(), FName("Pickup Range Sphere"));
+		PickupRangeSphere->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
+		PickupRangeSphere->SetSphereRadius(ItemPickupRange);
+	}
+
+	if(!InteractRangeSphere)
+	{
+		InteractRangeSphere = NewObject<UDetectionSphere>(this, UDetectionSphere::StaticClass(), FName("Interact Range Sphere"));
+		InteractRangeSphere->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
+		InteractRangeSphere->SetSphereRadius(InteractRange);
+	}
 }
 
 // Called every frame

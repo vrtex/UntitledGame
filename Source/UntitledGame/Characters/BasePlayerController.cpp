@@ -80,11 +80,9 @@ void ABasePlayerController::Possess(APawn* aPawn)
 		return;
 	}
 
-	if(!ensure(ControlledCharacter->PickupRangeSphere && ControlledCharacter->InteractRangeSphere))
+	if(!(ControlledCharacter->PickupRangeSphere && ControlledCharacter->InteractRangeSphere))
 	{
-		UE_LOG(LogTemp, Error, TEXT("No bubbles"));
-		FGenericPlatformMisc::RequestExit(false);
-		return;
+		ControlledCharacter->RecreateBubles();
 	}
 
 	// ControlledCharacter->AttackRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABasePlayerController::EnemyDetected);

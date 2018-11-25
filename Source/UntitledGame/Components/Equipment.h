@@ -27,7 +27,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void AttackStats(class UCharacterStats * S);
+	void AttachStats(class UCharacterStats * S);
+
+	void AttachInventory(class UInventory * Inv);
 
 	FEquipmentDelegate OnChange;
 
@@ -38,6 +40,9 @@ public:
 		bool Unequip(EItemType Slot);
 
 	UFUNCTION(BlueprintPure, Category = "Items")
+		bool HasItem(const EItemType slot) const;
+
+	UFUNCTION(BlueprintPure, Category = "Items")
 		FItemInfo GetItem(const EItemType Slot) const;
 
 private:
@@ -45,4 +50,6 @@ private:
 
 protected:
 	class UCharacterStats * ManipulatedStats = nullptr;
+
+	class UInventory * Backpack = nullptr;
 };

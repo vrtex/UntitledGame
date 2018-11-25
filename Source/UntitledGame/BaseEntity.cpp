@@ -21,7 +21,10 @@ void ABaseEntity::BeginPlay()
 {
 	Super::BeginPlay();
 	if(BaseAttackSkillClass.Get() && SkillSet)
+	{
+		SkillSet->SetDefaultAttack(BaseAttackSkillClass);
 		SkillSet->ChangeSkill(ESkillSlot::Primary, BaseAttackSkillClass);
+	}
 	else
 	{
 		if(!SkillSet)
@@ -219,6 +222,11 @@ void ABaseEntity::CancelCurrentSkill()
 	if(!CurrentSkill)
 		return;
 	CurrentSkill->Cancel();
+}
+
+UCharacterStats * ABaseEntity::GetStats() const
+{
+	return CharacterStats;
 }
 
 float ABaseEntity::GetResistTo(EDamageElement Element, EDamageType Type) const

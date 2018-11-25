@@ -98,6 +98,9 @@ public:
 
 	virtual void CancelCurrentSkill();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Stats")
+		UCharacterStats * GetStats() const;
+
 	float GetResistTo(EDamageElement Element, EDamageType Type) const;
 
 	bool IsDead() const;

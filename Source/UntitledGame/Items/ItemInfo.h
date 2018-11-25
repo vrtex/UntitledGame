@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Includes.h"
+#include "ActiveSkills/BaseSkill.h"
 #include "ItemInfo.generated.h"
 
 /**
@@ -50,39 +51,9 @@ struct FItemInfo
 		FText ItemName = FText();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UTexture2D * ItemIcon = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<UBaseSkill> GrantedSkill;
+
 	// list of modifiers; might be empty
-
-	/*
-	FItemInfo()
-	{
-		ItemType = EItemType::None;
-		bStackable = false;
-		ItemName = FText();
-		StackSize = 0;
-		MaxStackSize = 1;
-		ItemIcon = nullptr;
-	}
-
-	FItemInfo(const FItemInfo & Other)
-	{
-		ItemType = Other.ItemType;
-		bStackable = Other.bStackable;
-		ItemName = Other.ItemName;
-		StackSize = Other.StackSize;
-		MaxStackSize = Other.MaxStackSize;
-		ItemIcon = Other.ItemIcon;
-	}
-
-	FItemInfo operator=(const FItemInfo & Other)
-	{
-		ItemType = Other.ItemType;
-		bStackable = Other.bStackable;
-		ItemName = Other.ItemName;
-		StackSize = Other.StackSize;
-		MaxStackSize = Other.MaxStackSize;
-		ItemIcon = Other.ItemIcon;
-		return *this;
-	}
-	*/
 
 };

@@ -34,7 +34,7 @@ bool UBasicMeleeAttack::Use_Implementation(ABaseEntity * User, ABaseEntity * Tar
 	}
 	if(Target && User->GetRelationTowards(Target->GetTeamLabel()) != ETeamRelation::Hostile)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor %s trying to attack non-hostile target, something went wrong (basic melee attack)"), *User->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("Actor %s trying to attack non-hostile target %s, something went wrong (basic melee attack)"), *User->GetName(), *Target->GetName());
 		return false;
 	}
 	CurrentUser = User;

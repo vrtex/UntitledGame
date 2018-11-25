@@ -67,7 +67,13 @@ void ABaseEnemyController::Possess(APawn * aPawn)
 	Controlled->NoticeRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABaseEnemyController::EnemyDetected);
 	Controlled->ForgetRangeSphere->OnComponentEndOverlap.AddDynamic(this, &ABaseEnemyController::ForgetEnemy);
 
+	TArray<AActor *> InitialActors;
+	Controlled->NoticeRangeSphere->GetOverlappingActors(InitialActors, ABaseEntity::StaticClass());
+	InitialActors.Remove(GetControledEnemy());
 	SetupBehaviour();
+
+	for(auto A : InitialActors)
+		EnemyDetected(nullptr, A, nullptr, 0, false, FHitResult());
 
 }
 

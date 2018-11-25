@@ -26,8 +26,13 @@ protected:
 public:	
 	// Called every frame
 
+	// Tries to add. If no place returns false, otherwise adds and returns true
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		bool AddItem(FItemInfo ToAdd);
+
+	// Tries to add item. If no place spawns it in world and returns false. Otherwise adds and returns true
+	UFUNCTION(BlueprintCallable, Category = "Items")
+		bool AddForced(FItemInfo ToAdd);
 
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		bool RemoveItemAtIndex(int32 Index);
@@ -36,9 +41,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		bool RemoveItemAtIndexStack(int32 Index, int32 Count);
 
+	// Helper funtionc to spawn item that's not in inventory
+	UFUNCTION(BlueprintCallable, Category = "Items")
+		void DropForced(FItemInfo & ToDrop);
+
 	// Removes item and drops to the ground
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		bool DropItem(int32 Index);
+
+	UFUNCTION(BlueprintCallable, Category = "Items")
+		void DropAll();
 
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		void SwapItems(int32 Index, int32 OtherIndex);
@@ -80,7 +92,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Items")
 		int32 GetNumberOfItems() const;
 
-	// returns new capacity
+	// resets inventory and returns new capacity
 		int32 SetCapacity(int32 NewSize);
 
 	UFUNCTION(BlueprintPure, Category = "Items")

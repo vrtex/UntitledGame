@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Equipment.h"
+#include "Characters/Inventory.h"
+#include "Items/PickupItem.h"
 
 
 // Sets default values for this component's properties
@@ -8,7 +10,7 @@ UEquipment::UEquipment()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
 }
@@ -28,7 +30,6 @@ void UEquipment::BeginPlay()
 	{
 		CurrentEquipment.Add(T, FItemInfo::GetEmptyItem());
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Size: %d"), CurrentEquipment.Num());
 }
 
 
@@ -40,9 +41,14 @@ void UEquipment::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 	// ...
 }
 
-void UEquipment::AttackStats(UCharacterStats * S)
+void UEquipment::AttachStats(UCharacterStats * S)
 {
 	ManipulatedStats = S;
+}
+
+void UEquipment::AttachInventory(UInventory * Inv)
+{
+	Backpack = Inv;
 }
 
 bool UEquipment::Equip(const FItemInfo & Item)
@@ -71,12 +77,21 @@ bool UEquipment::Unequip(EItemType Slot)
 	if(!CurrentEquipment.Contains(Slot) || CurrentEquipment[Slot].ItemType == EItemType::None)
 		return false;
 
+	// TODO: manipulate stats
+	FItemInfo Removed = GetItem(Slot);
 	CurrentEquipment[Slot] = FItemInfo::GetEmptyItem();
+	if(Backpack)
+		Backpack->AddForced(Removed);
 	OnChange.Broadcast();
 
-	// TODO: manipulate stats
-
 	return true;
+}
+
+bool UEquipment::HasItem(const EItemType Slot) const
+{
+	if(!CurrentEquipment.Contains(Slot))
+		return false;
+	return CurrentEquipment[Slot].ItemType != EItemType::None;
 }
 
 FItemInfo UEquipment::GetItem(const EItemType Slot) const

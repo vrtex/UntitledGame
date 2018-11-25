@@ -32,6 +32,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+
+	void RecreateBubles();
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

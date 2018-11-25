@@ -8,7 +8,6 @@
 #include "BaseSkill.generated.h"
 
 
-
 UENUM(BlueprintType)
 enum class ESkillSlot : uint8
 {

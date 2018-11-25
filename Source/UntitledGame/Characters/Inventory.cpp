@@ -70,6 +70,15 @@ bool UInventory::AddItem(FItemInfo ToAdd)
 	return true;
 }
 
+bool UInventory::AddForced(FItemInfo ToAdd)
+{
+	if(AddItem(ToAdd))
+		return true;
+
+	DropForced(ToAdd);
+	return false;
+}
+
 bool UInventory::RemoveItemAtIndex(int32 Index)
 {
 	if(Content[Index].ItemType == EItemType::None)
@@ -99,6 +108,22 @@ bool UInventory::RemoveItemAtIndexStack(int32 Index, int32 Count)
 	return true;
 }
 
+void UInventory::DropForced(FItemInfo & ToDrop)
+{
+	AActor * Owner = GetOwner();
+	if(!Owner || !DroppedItemClass.Get())
+		return;
+
+	APickupItem * DroppedItem = Owner->GetWorld()->SpawnActorDeferred<APickupItem>(DroppedItemClass.Get(), Owner->GetTransform());
+	DroppedItem->SetHeldItem(ToDrop);
+
+	FTransform DropTransform = Owner->GetTransform();
+	DropTransform.AddToTranslation(
+		FVector(FMath::RandRange(-DropRange, DropRange), FMath::RandRange(-DropRange, DropRange), 0));
+
+	UGameplayStatics::FinishSpawningActor(DroppedItem, DropTransform);
+}
+
 bool UInventory::DropItem(int32 Index)
 {
 	if(!HasItemAtIndex(Index))
@@ -107,22 +132,15 @@ bool UInventory::DropItem(int32 Index)
 	RemoveItemAtIndex(Index);
 	AActor * Owner = GetOwner();
 	if(!Owner || !DroppedItemClass.Get())
-		return true;
-	APickupItem * DroppedItem = Owner->GetWorld()->SpawnActorDeferred<APickupItem>(DroppedItemClass.Get(), Owner->GetTransform());
-	DroppedItem->SetHeldItem(ToDrop);
-
-	FTransform DropTransform = Owner->GetTransform();
-	DropTransform.AddToTranslation(
-		FVector(FMath::RandRange(-DropRange, DropRange), FMath::RandRange(-DropRange, DropRange), 0));
-	/*
-	FVector OwnerLocation = DropTransform.GetLocation();
-	OwnerLocation.X += FMath::RandRange(-DropRange, DropRange);
-	OwnerLocation.Y += FMath::RandRange(-DropRange, DropRange);
-	DropTransform.SetLocation(OwnerLocation);
-	*/
-
-	UGameplayStatics::FinishSpawningActor(DroppedItem, DropTransform);
+		return false;
+	DropForced(ToDrop);
 	return true;
+}
+
+void UInventory::DropAll()
+{
+	for(int32 i = 0; i < GetCapacity(); ++i)
+		DropItem(i);
 }
 
 void UInventory::SwapItems(int32 Index, int32 OtherIndex)
@@ -238,25 +256,9 @@ int32 UInventory::GetNumberOfItems() const
 
 int32 UInventory::SetCapacity(int32 NewSize)
 {
-	if(NewSize == GetCapacity())
-		return GetCapacity();
-
-	if(NewSize > GetCapacity())
-	{
-		FItemInfo EmptyItem;
-		int32 Diff = NewSize - GetCapacity();
-		Capacity = NewSize;
-		for(int32 i = 0; i < Diff; ++i)
-			Content.Add(EmptyItem);
-		return GetCapacity();
-	}
-	else // shrink inventory
-	{
-		// TODO: decide what to do with Items > NewSize
-		return GetCapacity();
-	}
-
-	return GetCapacity(); // lol
+	Capacity = NewSize;
+	EmptyInventory();
+	return GetCapacity();
 }
 
 int32 UInventory::GetCapacity() const
