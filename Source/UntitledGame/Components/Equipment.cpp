@@ -64,8 +64,7 @@ FItemInfo UEquipment::Equip(const FItemInfo & Item)
 		UE_LOG(LogTemp, Warning, TEXT("Slot: %d, Item: %s"), (int32)I.Key,  *I.Value.ItemName.ToString());
 	}
 
-	// TODO: manipulate stats
-	ManipulateStats(Item, true);
+	ManipulateStats(CurrentEquipment[Item.ItemType], true);
 	OnChange.Broadcast();
 
 	return Previous;
@@ -76,9 +75,9 @@ FItemInfo UEquipment::Unequip(EItemType Slot)
 	if(!CurrentEquipment.Contains(Slot) || CurrentEquipment[Slot].ItemType == EItemType::None)
 		return FItemInfo::GetEmptyItem();
 
-	// TODO: manipulate stats
+	if(CurrentEquipment[Slot].ItemType != EItemType::None)
+		ManipulateStats(CurrentEquipment[Slot], false);
 	FItemInfo Removed = GetItem(Slot);
-	ManipulateStats(Removed, false);
 	CurrentEquipment[Slot] = FItemInfo::GetEmptyItem();
 	// SendToBackpack(Removed);
 	OnChange.Broadcast();
@@ -97,15 +96,13 @@ void UEquipment::ManipulateStats(const FItemInfo & Item, bool bEquip)
 {
 	if(!ManipulatedStats)
 		return;
-	for(auto Mod : Item.StatsMods)
-	{
-		if(bEquip)
-			// ManipulatedStats->AddMod(Mod);
-			ManipulatedStats->AddList(Item.GrantedMods);
-		else
-			// ManipulatedStats->RemoveMod(Mod);
-			ManipulatedStats->RemoveList(Item.GrantedMods);
-	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Manipulating, number: %i"), Item.GrantedMods.Mods.Num());
+
+	if(bEquip)
+		ManipulatedStats->AddList(Item.GrantedMods);
+	else
+		ManipulatedStats->RemoveList(Item.GrantedMods);
 }
 
 bool UEquipment::HasItem(const EItemType Slot) const

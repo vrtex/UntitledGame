@@ -35,19 +35,13 @@ struct FStatsModifier
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		EStatField Field;
+		EStatField Field = EStatField::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		EModType Type;
+		EModType Type = EModType::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float Value;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float Min;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float Max;
+		float Value = 0.f;
 };
 
 

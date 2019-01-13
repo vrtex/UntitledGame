@@ -17,13 +17,16 @@ float UCharacterStat::GetValue() const
 
 	Value = Base;
 	float FlatIncrease = 0.f;
-	float IncreaseValue = 1.f;
+	float IncreaseValue = 100.f;
 	TArray<float> MoreMultipliers;
 
 	for(const auto & M : AppliedMods)
 	{
 		switch(M->Type)
 		{
+		case EModType::None:
+			UE_LOG(LogTemp, Warning, TEXT("Boo-boo, type is none"));
+			break;
 		case EModType::Flat:
 			FlatIncrease += M->Value;
 			break;
@@ -31,36 +34,39 @@ float UCharacterStat::GetValue() const
 			IncreaseValue += M->Value;
 			break;
 		case EModType::More:
-			MoreMultipliers.Add(M->Value + 1.f);
+			MoreMultipliers.Add(M->Value + 100.f);
 			break;
 		default:
+			UE_LOG(LogTemp, Warning, TEXT("Unknown mod type"));
 			break;
 		}
 	}
 
+
 	Value += FlatIncrease;
-	Value *= IncreaseValue;
+	Value *= IncreaseValue / 100.f;
 	for(auto Multiplier : MoreMultipliers)
-		Value *= Multiplier;
+		Value *= Multiplier / 100.f;
 
 	bChanged = false;
 	return Value;
 }
 
-void UCharacterStat::ReceiveModifier(const FStatsModifier & Mod)
+bool UCharacterStat::ReceiveModifier(const FStatsModifier & Mod)
 {
 	if(AppliedMods.Contains(&Mod))
-		return;
+		return false;
 
 	AppliedMods.Add(&Mod);
 	bChanged = true;
+	return true;
 }
 
-void UCharacterStat::RemoveModifier(const FStatsModifier & Mod)
+bool UCharacterStat::RemoveModifier(const FStatsModifier & Mod)
 {
 	if(!AppliedMods.Contains(&Mod))
-		return;
-
+		return false;
 	AppliedMods.Remove(&Mod);
 	bChanged = true;
+	return true;
 }

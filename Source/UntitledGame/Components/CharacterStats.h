@@ -42,11 +42,14 @@ public:
 	void RemoveMod(const FStatsModifier & Mod);
 	*/
 
-	void AddList(const FStatsModifierList & List);
+	UFUNCTION(BlueprintCallable)
+		void AddList(const FStatsModifierList & List);
 
-	void RemoveList(const FStatsModifierList & List);
+	UFUNCTION(BlueprintCallable)
+		void RemoveList(const FStatsModifierList & List);
 
-	void RecalculateStats();
+	UFUNCTION(BlueprintPure)
+		UCharacterStat * GetStat(EStatField Field) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		void SetMaxHealth(float NewMax);
@@ -75,9 +78,5 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Defence|Resists")
 		TMap<EDamageElement, float> ElementalResists;
 
-	UPROPERTY(EditAnywhere, Category = "Health")
-		float MaxHealth = 100.f;
 
-	UPROPERTY(EditAnywhere, Category = "Mana")
-		float MaxMana = 100.f;
 };

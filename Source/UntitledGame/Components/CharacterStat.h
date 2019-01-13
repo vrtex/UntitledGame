@@ -22,11 +22,11 @@ public:
 	UFUNCTION(BlueprintPure)
 		float GetValue() const;
 
-	void ReceiveModifier(const FStatsModifier & Mod);
+	bool ReceiveModifier(const FStatsModifier & Mod);
 
-	void RemoveModifier(const FStatsModifier & Mod);
+	bool RemoveModifier(const FStatsModifier & Mod);
 
-private:
+protected:
 
 	mutable bool bChanged = false;
 
@@ -34,7 +34,8 @@ private:
 
 	float Base = 0.f;
 
-	mutable float Value = 0.f;
+	UPROPERTY(VisibleAnywhere)
+		mutable float Value = 0.f;
 	
 	
 };

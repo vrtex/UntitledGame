@@ -42,8 +42,6 @@ void UCharacterStats::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 void UCharacterStats::AddLevel()
 {
 	UE_LOG(LogTemp, Warning, TEXT("SDOUGSDUIGNJHBIN"));
-	MaxHealth += 10.f;
-	MaxMana += 20.f;
 	OnChange.Broadcast();
 }
 /*
@@ -113,13 +111,15 @@ void UCharacterStats::RemoveList(const FStatsModifierList & List)
 	}
 }
 
-void UCharacterStats::RecalculateStats()
+UCharacterStat * UCharacterStats::GetStat(EStatField Field) const
 {
+	if(!StatList.Contains(Field))
+		return nullptr;
+	return StatList[Field];
 }
 
 void UCharacterStats::SetMaxHealth(float NewMax)
 {
-	MaxHealth = FMath::Max<float>(0.f, NewMax);
 	StatList[EStatField::MaxMana]->SetBase(NewMax);
 	OnChange.Broadcast();
 }
@@ -131,7 +131,6 @@ float UCharacterStats::GetMaxHealth() const
 
 void UCharacterStats::SetMaxMana(float NewMax)
 {
-	MaxMana = FMath::Max<float>(0.f, NewMax);
 	StatList[EStatField::MaxMana]->SetBase(NewMax);
 	OnChange.Broadcast();
 }
