@@ -22,6 +22,8 @@ class UNTITLEDGAME_API UBasicMeleeAttack : public UBaseSkill
 
 	virtual void Cancel_Implementation() override;
 
+	virtual void Finish_Implementation() override;
+
 	virtual void BeginDestroy() override;
 
 private:

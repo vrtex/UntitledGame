@@ -79,13 +79,24 @@ bool UInventory::AddForced(FItemInfo ToAdd)
 	return false;
 }
 
+FItemInfo UInventory::Replace(int32 Index, FItemInfo NewItem)
+{
+	FItemInfo Previous = GetItem(Index);
+
+	if(Previous.ItemType == EItemType::None)
+		CurrentSize++;
+	Content[Index] = NewItem;
+	OnPickup.Broadcast(this, true, NewItem);
+
+	return Previous;
+}
+
 bool UInventory::RemoveItemAtIndex(int32 Index)
 {
 	if(Content[Index].ItemType == EItemType::None)
 		return false;
 	// if item at Index is sackable check is stacks size > 1
 		// if true remove 1 from stack and return true
-
 
 	FItemInfo EmptyItem;
 	FItemInfo Removed = Content[Index];

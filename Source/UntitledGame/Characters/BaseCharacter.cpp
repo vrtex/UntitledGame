@@ -29,6 +29,8 @@ ABaseCharacter::ABaseCharacter()
 	CameraBoom->bDoCollisionTest = false;
 	CameraBoom->bAbsoluteRotation = true;
 	CameraBoom->bAbsoluteLocation = true;
+	CameraBoom->SetRelativeRotation(FRotator(-70.f, 0, 0));
+	CameraBoom->TargetArmLength = 800.f;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(FName("Camera"));
 	Camera->SetupAttachment(CameraBoom);
@@ -44,6 +46,9 @@ ABaseCharacter::ABaseCharacter()
 	
 	Backpack = CreateDefaultSubobject<UInventory>(FName("Backpack"));
 	Equipment = CreateDefaultSubobject<UEquipment>(FName("Equipment"));
+	// TODO: component not created
+	LevelComponent = CreateDefaultSubobject<UCharacterLevel>(FName("LevelComponent"));
+
 }
 
 // Called when the game starts or when spawned
@@ -59,6 +64,12 @@ void ABaseCharacter::BeginPlay()
 	Equipment->AttachStats(GetStats());
 
 	SkillSet->AttachEquipment(Equipment);
+	if(LevelComponent)
+		LevelComponent->OnLevelUp.AddDynamic(GetStats(), &UCharacterStats::AddLevel);
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DUPA2"));
+	}
 
 	SetTeamLabel(GenericPlayerTeam);
 }
@@ -97,6 +108,11 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 float ABaseCharacter::GetPickupRange() const
 {
 	return ItemPickupRange;
+}
+
+UParticleSystem * ABaseCharacter::GetLevelUpParticles() const
+{
+	return LevelUpParticles;
 }
 
 void ABaseCharacter::ChangeZoom(int32 Change)
@@ -179,6 +195,16 @@ TArray<AActor*> ABaseCharacter::GetItemsInRange() const
 	TArray<AActor*> Items;
 	PickupRangeSphere->GetOverlappingActors(Items);
 	return Items;
+}
+
+UEquipment * ABaseCharacter::GetEquipment() const
+{
+	return Equipment;
+}
+
+UCharacterLevel * ABaseCharacter::GetLevelComponent() const
+{
+	return LevelComponent;
 }
 
 bool ABaseCharacter::IsInteractableInRange(AActor * ToCheck) const

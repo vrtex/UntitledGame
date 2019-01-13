@@ -43,6 +43,11 @@ public:
 		void Cancel();
 
 	virtual void Cancel_Implementation();
+	
+	UFUNCTION(BlueprintNativeEvent, Category = "Skills")
+		void Finish();
+
+	virtual void Finish_Implementation();
 
 	UFUNCTION(BlueprintPure, Category = "Skills")
 		UTexture2D * GetSkillIcon() const;

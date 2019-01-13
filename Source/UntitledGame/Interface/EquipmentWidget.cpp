@@ -13,6 +13,7 @@ void UEquipmentWidget::Setup_Implementation(ABaseCharacter * Character)
 		return;
 	}
 
+
 	Owner = Character;
 
 	Character->Equipment->OnChange.AddDynamic(this, &UEquipmentWidget::UpdateEquipment);

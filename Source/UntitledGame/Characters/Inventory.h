@@ -34,6 +34,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		bool AddForced(FItemInfo ToAdd);
 
+	// Returns previous item
+	UFUNCTION(BlueprintCallable, Category = "Items")
+		FItemInfo Replace(int32 Index, FItemInfo NewItem);
+
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		bool RemoveItemAtIndex(int32 Index);
 

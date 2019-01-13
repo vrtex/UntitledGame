@@ -1,12 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BaseEnemy.h"
+#include "Components/CharacterLevel.h"
 
 
 // Sets default values
 ABaseEnemy::ABaseEnemy()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 	SetRootComponent(GetCapsuleComponent());
 
@@ -75,6 +76,7 @@ bool ABaseEnemy::ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDa
 	bool bDealtSomething = Super::ReceiveDamage(Damage, DealtDamage, DamageDealer, Instigator);
 	if(IsDead())
 	{
+		LastHitBy = DamageDealer;
 		Die();
 	}
 	return bDealtSomething;
@@ -100,8 +102,19 @@ float ABaseEnemy::Attack(AActor * Target)
 	return 0.0f;
 }
 
+void ABaseEnemy::OfferXP()
+{
+	if(!LastHitBy)
+		return;
+	TArray<UActorComponent *> LvlComps;
+	LvlComps = LastHitBy->GetComponentsByClass(UCharacterLevel::StaticClass());
+	for(auto C : LvlComps)
+		Cast<UCharacterLevel>(C)->AddXP(70.f);
+}
+
 void ABaseEnemy::Die()
 {
+	OfferXP();
 	DropInventory->DropAll();
 	Destroy();
 }

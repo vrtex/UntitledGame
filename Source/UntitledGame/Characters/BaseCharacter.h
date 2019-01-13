@@ -13,6 +13,8 @@
 #include "Components/Equipment.h"
 #include "Components/CharacterStats.h"
 #include "BaseEntity.h"
+#include "Interface/SkillTreeWidget.h"
+#include "Components/CharacterLevel.h"
 #include "BaseCharacter.generated.h"
 
 
@@ -44,6 +46,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		float GetPickupRange() const;
 
+	UParticleSystem * GetLevelUpParticles() const;
+
 
 	void ChangeZoom(int32 Change);
 
@@ -66,6 +70,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		TArray<AActor *> GetItemsInRange() const;
 
+
+	UFUNCTION(BlueprintPure)
+		UEquipment * GetEquipment() const;
+	UFUNCTION(BlueprintPure)
+		UCharacterLevel * GetLevelComponent() const;
+
+
 protected:
 
 
@@ -82,15 +93,25 @@ protected:
 		USpringArmComponent * CameraBoom = nullptr;
 	UPROPERTY(VisibleAnywhere)
 		UCameraComponent * Camera = nullptr;
+
 public: // no fucks given
 	UPROPERTY(VisibleAnywhere)
 		UDetectionSphere * PickupRangeSphere = nullptr;
+	
 	UPROPERTY(VisibleAnywhere)
 		UDetectionSphere * InteractRangeSphere = nullptr;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UInventory * Backpack = nullptr;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UEquipment * Equipment = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		UCharacterLevel * LevelComponent = nullptr;
+
+	UPROPERTY(EditAnywhere)
+		UParticleSystem * LevelUpParticles = nullptr;
 
 private:
 

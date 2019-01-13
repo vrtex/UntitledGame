@@ -41,7 +41,6 @@ void ABasePlayerController::Tick(float DeltaTime)
 	if(TargetActor)
 		MoveToActor(TargetActor);
 	else if(CurrentMovementType == EMovementTargetType::Ground)
-		// TODO: shouldn't this be Ground?
 		FollowCursor();
 
 	/*
@@ -89,14 +88,29 @@ void ABasePlayerController::Possess(APawn* aPawn)
 	ControlledCharacter->PickupRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABasePlayerController::ItemDetected);
 	ControlledCharacter->InteractRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &ABasePlayerController::NPCDetected);
 
+	if(GetControlledCharacter()->Equipment)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Has eq"));
+	}
+
+	/*
 	InventoryWidget = Cast<UInventoryWidget>(CreateWidget(this, InventoryWidgetClass.Get(), FName("Inventory display")));
 	InventoryWidget->SetupInventory(ControlledCharacter);
+	*/
+
+	if(SkillTreeClass.Get())
+	{
+		CharacterSkillTree = CreateWidget<USkillTreeWidget>(this, SkillTreeClass);
+		CharacterSkillTree->Setup(GetControlledCharacter());
+	}
 
 	SetupHUD();
 }
 
 void ABasePlayerController::OnLeftClick()
 {
+	if(!GetControlledCharacter()->CanReact())
+		return;
 	FHitResult Hit;
 	EMovementTargetType NewMoveType = GetIntendedTargetType(Hit);
 	SetMovementTarget(NewMoveType, Hit.GetActor());
@@ -118,7 +132,6 @@ void ABasePlayerController::OnLeftClick()
 		ClearMovementTarget();
 		break;
 	case EMovementTargetType::Enemy:
-		UE_LOG(LogTemp, Warning, TEXT("Has Target: %d"), Cast<ABaseEntity>(Hit.GetActor()) ? 1 : 0);
 		GetControlledCharacter()->UseSkill(ESkillSlot::Primary, Cast<ABaseEntity>(Hit.GetActor()), Hit.ImpactPoint);
 		if(!GetControlledCharacter()->GetEnemiesInRange().Contains(TargetActor))
 			break;
@@ -169,15 +182,20 @@ void ABasePlayerController::ShowInventory()
 	}
 
 	if(InventoryWidget->IsInViewport())
-	{
 		InventoryWidget->RemoveFromParent();
-		return;
-	}
 	else
-	{
 		InventoryWidget->AddToViewport();
+}
+
+void ABasePlayerController::ToggleSkillTree()
+{
+	if(!CharacterSkillTree)
 		return;
-	}
+
+	if(!CharacterSkillTree->IsInViewport())
+		CharacterSkillTree->AddToViewport();
+	else
+		CharacterSkillTree->RemoveFromParent();
 }
 
 void ABasePlayerController::OpenShop(UUserWidget * ShopWidget, ABaseNPC * ShopOwner)
@@ -364,12 +382,14 @@ void ABasePlayerController::FollowCursor()
 	GetHitResultUnderCursor(CursorTraceChannel, false, Hit);
 	if(!Hit.bBlockingHit)
 		return;
-	UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, Hit.ImpactPoint);
+	GetControlledCharacter()->MoveToLocation(Hit.ImpactPoint);
+	// UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, Hit.ImpactPoint);
 }
 
 void ABasePlayerController::MoveToActor(AActor * Target)
 {
-	UAIBlueprintHelperLibrary::SimpleMoveToActor(this, Target);
+	GetControlledCharacter()->MoveToActor(Target);
+	// UAIBlueprintHelperLibrary::SimpleMoveToActor(this, Target);
 }
 
 void ABasePlayerController::TryPickupItem(APickupItem * ToPickup)

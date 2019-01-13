@@ -8,6 +8,7 @@
 #include "Components/ManaComponent.h"
 #include "Interfaces/DamageInfo.h"
 #include "Components/CharacterStats.h"
+#include "Interfaces/StatsModifier.h"
 #include "Interfaces/TeamInterface.h"
 #include "ActiveSkills/BaseSkill.h"
 #include "ActiveSkills/SkillSet.h"
@@ -15,6 +16,17 @@
 #include "Includes.h"
 #include "BaseEntity.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EEntityState : uint8
+{
+	Idle,
+	Moving,
+	MeleeAttack,
+	RangedAttack,
+	MagicCast,
+	Stun
+};
 
 UCLASS()
 class UNTITLEDGAME_API ABaseEntity : public ACharacter
@@ -51,6 +63,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Items")
 		void SetAttackRange(float NewRange);
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+		void StopMovement();
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+		void MoveToLocation(FVector Target);
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+		void MoveToActor(AActor * Target);
+
+	UFUNCTION(BlueprintCallable, Category = "General")
+		void FaceLocation(const FVector Target);
 
 	UFUNCTION(BlueprintCallable, Category = "General")
 		void FaceActor(const AActor * Target);
@@ -90,11 +114,37 @@ public:
 
 	float RestoreMana(float ToRestore);
 	
-	void OnStatsChange();
+	UFUNCTION()
+		void OnStatsChange();
+
+	UFUNCTION(Blueprintcallable, Category = "Stats")
+		void AddStatsModifiers(const FStatsModifierList & ToAdd);
+
+	UFUNCTION(Blueprintcallable, Category = "Stats")
+		void RemoveStatsModifiers(const FStatsModifierList & ToRemove);
+
+	UFUNCTION(BlueprintCallable)
+		void SetCurrentState(EEntityState NewState);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		EEntityState GetCurrentState() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool IsInCombat() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool CanReact() const;
 
 	virtual bool UseSkill(ESkillSlot ToUse, ABaseEntity * Target, FVector Location);
 
-	UBaseSkill * GetSkill(ESkillSlot Slot);
+	UFUNCTION(BlueprintCallable, Category = "Skills")
+		virtual void FinishCurrentSkill();
+
+	UFUNCTION(BlueprintPure, Category = "Skills")
+		USkillSet * GetSkillSet() const;
+
+	UFUNCTION(BlueprintPure, Category = "Skills")
+		UBaseSkill * GetSkill(ESkillSlot Slot) const;
 
 	virtual void CancelCurrentSkill();
 
@@ -135,6 +185,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		USkillSet * SkillSet = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		EEntityState CurrentState = EEntityState::Idle;
 
 protected:
 	UBaseSkill * CurrentSkill = nullptr;

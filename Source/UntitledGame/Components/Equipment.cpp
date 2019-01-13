@@ -2,6 +2,7 @@
 
 #include "Equipment.h"
 #include "Characters/Inventory.h"
+#include "Components/CharacterStats.h"
 #include "Items/PickupItem.h"
 
 
@@ -51,40 +52,60 @@ void UEquipment::AttachInventory(UInventory * Inv)
 	Backpack = Inv;
 }
 
-bool UEquipment::Equip(const FItemInfo & Item)
+FItemInfo UEquipment::Equip(const FItemInfo & Item)
 {
 	if(!CurrentEquipment.Contains(Item.ItemType))
-		return false;
+		return FItemInfo::GetEmptyItem();
 
-	if(CurrentEquipment[Item.ItemType].ItemType != EItemType::None)
-		return false;
-
+	FItemInfo Previous = Unequip(Item.ItemType);
 	CurrentEquipment[Item.ItemType] = Item;
-
 	for(auto I : CurrentEquipment)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Slot: %d, Item: %s"), (int32)I.Key,  *I.Value.ItemName.ToString());
 	}
 
 	// TODO: manipulate stats
+	ManipulateStats(Item, true);
 	OnChange.Broadcast();
 
-	return true;
+	return Previous;
 }
 
-bool UEquipment::Unequip(EItemType Slot)
+FItemInfo UEquipment::Unequip(EItemType Slot)
 {
 	if(!CurrentEquipment.Contains(Slot) || CurrentEquipment[Slot].ItemType == EItemType::None)
-		return false;
+		return FItemInfo::GetEmptyItem();
 
 	// TODO: manipulate stats
 	FItemInfo Removed = GetItem(Slot);
+	ManipulateStats(Removed, false);
 	CurrentEquipment[Slot] = FItemInfo::GetEmptyItem();
-	if(Backpack)
-		Backpack->AddForced(Removed);
+	// SendToBackpack(Removed);
 	OnChange.Broadcast();
 
-	return true;
+	return Removed;
+}
+
+void UEquipment::SendToBackpack(const FItemInfo & Item)
+{
+	if(!Backpack)
+		return;
+	Backpack->AddForced(Item);
+}
+
+void UEquipment::ManipulateStats(const FItemInfo & Item, bool bEquip)
+{
+	if(!ManipulatedStats)
+		return;
+	for(auto Mod : Item.StatsMods)
+	{
+		if(bEquip)
+			// ManipulatedStats->AddMod(Mod);
+			ManipulatedStats->AddList(Item.GrantedMods);
+		else
+			// ManipulatedStats->RemoveMod(Mod);
+			ManipulatedStats->RemoveList(Item.GrantedMods);
+	}
 }
 
 bool UEquipment::HasItem(const EItemType Slot) const

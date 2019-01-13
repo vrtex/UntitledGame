@@ -23,6 +23,9 @@ class UNTITLEDGAME_API UBasicRangedAttack : public UBaseSkill
 
 	virtual void Cancel_Implementation() override;
 
+	virtual void Finish_Implementation() override;
+
+
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Skills")
@@ -31,6 +34,10 @@ protected:
 private:
 
 	UDetectionSphere * RangeSphere = nullptr;
+
+	ABaseEntity * CurrentUser = nullptr;
+	ABaseEntity * CurrentTarget = nullptr;
+	FVector CurrentTargetLocation;
 	
 	
 };

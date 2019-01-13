@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Includes.h"
 #include "ActiveSkills/BaseSkill.h"
+#include "Interfaces/StatsModifier.h"
 #include "ItemInfo.generated.h"
 
 /**
@@ -53,6 +54,10 @@ struct FItemInfo
 		UTexture2D * ItemIcon = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<UBaseSkill> GrantedSkill;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FStatsModifier> StatsMods;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FStatsModifierList GrantedMods;
 
 	// list of modifiers; might be empty
 

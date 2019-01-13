@@ -37,15 +37,11 @@ public:
 
 	virtual void Hightlight(bool bTurnOn) override;
 
-	/*
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		virtual FText GetInteractableName() const;
-	*/
-
 	virtual FText GetInteractableName_Implementation() const;
 
 	virtual bool ReceiveDamage(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator) override;
 
+	// Deprecated
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
 		float Attack(AActor * Target);
 
@@ -75,6 +71,8 @@ public: // fucks given: 0
 		UInventory * DropInventory = nullptr;
 
 protected:
+	
+	void OfferXP();
 
 	virtual void Die();
 
@@ -82,4 +80,5 @@ protected:
 		FText DisplayName;
 private:
 
+	ABaseEntity * LastHitBy = nullptr;
 };

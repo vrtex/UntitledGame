@@ -19,10 +19,16 @@ void UBasicRangedAttack::BeginPlay()
 
 bool UBasicRangedAttack::Use_Implementation(ABaseEntity * User, ABaseEntity * Target, FVector TargetLocation)
 {
-	if(!ensure(User) || !ensure(ProjectileClass.Get()))
+	CurrentUser = User;
+	CurrentTarget = Target;
+	CurrentTargetLocation = TargetLocation;
+	if(!ensure(CurrentUser) || !ensure(ProjectileClass.Get()))
 	{
 		return false;
 	}
+
+	if(!CurrentUser->CanReact())
+		return false;
 
 	if(User->GetMana() < 20.f)
 	{
@@ -30,21 +36,46 @@ bool UBasicRangedAttack::Use_Implementation(ABaseEntity * User, ABaseEntity * Ta
 		return false;
 	}
 
-	User->RemoveMana(20.f);
-	FRotator Rotation;
-	TargetLocation = Target ? Target->GetActorLocation() : TargetLocation;
-	TargetLocation.Z = User->GetActorLocation().Z;
-	Rotation = UKismetMathLibrary::FindLookAtRotation(User->GetActorLocation(), TargetLocation);
-	FVector Location = GetOwner()->GetActorLocation();
-	FTransform SpawnTransform;
-	SpawnTransform.SetLocation(Location);
-	SpawnTransform.SetRotation(Rotation.Quaternion());
-	ABaseProjectile * SpawnedProjectile = GetWorld()->SpawnActorDeferred<ABaseProjectile>(ProjectileClass.Get(), SpawnTransform);
-	SpawnedProjectile->SetOwnerEntity(User);
-	UGameplayStatics::FinishSpawningActor(SpawnedProjectile, SpawnTransform);
+	CurrentUser->StopMovement();
+
+	if(CurrentTarget)
+		CurrentUser->FaceActor(CurrentTarget);
+	else
+		CurrentUser->FaceLocation(CurrentTargetLocation);
+	CurrentUser->SetCurrentState(EEntityState::RangedAttack);
+
 	return true;
 }
 
 void UBasicRangedAttack::Cancel_Implementation()
 {
+	CurrentTarget = nullptr;
+	if(!CurrentUser)
+		return;
+
+}
+
+void UBasicRangedAttack::Finish_Implementation()
+{
+	if(!CurrentUser)
+		return;
+
+
+	CurrentUser->RemoveMana(20.f);
+	
+	
+	FRotator Rotation;
+	CurrentTargetLocation = CurrentTarget ? CurrentTarget->GetActorLocation() : CurrentTargetLocation;
+	CurrentTargetLocation.Z = CurrentUser->GetActorLocation().Z;
+	Rotation = UKismetMathLibrary::FindLookAtRotation(CurrentUser->GetActorLocation(), CurrentTargetLocation);
+	FVector SpawnLocation = GetOwner()->GetActorLocation();
+	FTransform SpawnTransform;
+	SpawnTransform.SetLocation(SpawnLocation);
+	SpawnTransform.SetRotation(Rotation.Quaternion());
+	
+	ABaseProjectile * SpawnedProjectile = GetWorld()->SpawnActorDeferred<ABaseProjectile>(ProjectileClass.Get(), SpawnTransform);
+	SpawnedProjectile->SetOwnerEntity(CurrentUser);
+	UGameplayStatics::FinishSpawningActor(SpawnedProjectile, SpawnTransform);
+
+	Cancel();
 }

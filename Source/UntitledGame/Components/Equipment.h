@@ -33,11 +33,18 @@ public:
 
 	FEquipmentDelegate OnChange;
 
+	// Returns item that was previously equppied
 	UFUNCTION(BlueprintCallable, Category = "Items")
-		bool Equip(const FItemInfo & Item);
+		FItemInfo Equip(const FItemInfo & Item);
+
+	// Returns removed item (or empty item of none was equipped)
+	UFUNCTION(BlueprintCallable, Category = "Items")
+		FItemInfo Unequip(EItemType Slot);
 
 	UFUNCTION(BlueprintCallable, Category = "Items")
-		bool Unequip(EItemType Slot);
+		void SendToBackpack(const FItemInfo & Item);
+
+	void ManipulateStats(const FItemInfo & Item, bool bEquip);
 
 	UFUNCTION(BlueprintPure, Category = "Items")
 		bool HasItem(const EItemType slot) const;

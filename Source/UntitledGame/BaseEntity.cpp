@@ -34,6 +34,7 @@ void ABaseEntity::BeginPlay()
 
 		UE_LOG(LogTemp, Error, TEXT("%s has no basic attack. No hands"), *GetName());
 	}
+	CharacterStats->OnChange.AddDynamic(this, &ABaseEntity::OnStatsChange);
 	OnStatsChange();
 }
 
@@ -101,10 +102,41 @@ void ABaseEntity::SetAttackRange(float NewRange)
 	return;
 }
 
+void ABaseEntity::StopMovement()
+{
+	GetCharacterMovement()->StopMovementImmediately();
+	// SetCurrentState(EEntityState::Moving);
+}
+
+void ABaseEntity::MoveToLocation(FVector Target)
+{
+	UAIBlueprintHelperLibrary::SimpleMoveToLocation(GetController(), Target);
+	SetCurrentState(EEntityState::Moving);
+}
+
+void ABaseEntity::MoveToActor(AActor * Target)
+{
+	UAIBlueprintHelperLibrary::SimpleMoveToActor(GetController(), Target);
+	SetCurrentState(EEntityState::Moving);
+}
+
+void ABaseEntity::FaceLocation(const FVector Target)
+{
+	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(
+		GetActorLocation(),
+		Target
+	);
+	TargetRotation.Roll = 0;
+	TargetRotation.Pitch = 0;
+	SetActorRotation(TargetRotation);
+}
+
 void ABaseEntity::FaceActor(const AActor * Target)
 {
 	if(!Target)
 		return;
+	FaceLocation(Target->GetActorLocation());
+	/*
 	FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(
 		GetActorLocation(),
 		Target->GetActorLocation()
@@ -112,6 +144,7 @@ void ABaseEntity::FaceActor(const AActor * Target)
 	TargetRotation.Roll = 0;
 	TargetRotation.Pitch = 0;
 	SetActorRotation(TargetRotation);
+	*/
 }
 
 bool ABaseEntity::ReceiveDamageBP_Implementation(const FDamageInfo & Damage, FDamageInfo & DealtDamage, ABaseEntity * DamageDealer, AController * Instigator)
@@ -195,6 +228,43 @@ void ABaseEntity::OnStatsChange()
 	}
 }
 
+void ABaseEntity::AddStatsModifiers(const FStatsModifierList & ToAdd)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Adding, count: %i"), ToAdd.Mods.Num());
+}
+
+void ABaseEntity::RemoveStatsModifiers(const FStatsModifierList & ToRemove)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Removeing, count: %i"), ToRemove.Mods.Num());
+}
+
+void ABaseEntity::SetCurrentState(EEntityState NewState)
+{
+	CurrentState = NewState;
+}
+
+EEntityState ABaseEntity::GetCurrentState() const
+{
+	return CurrentState;
+}
+
+bool ABaseEntity::IsInCombat() const
+{
+	if(CurrentState == EEntityState::Idle
+		|| CurrentState == EEntityState::Moving)
+	return false;
+
+	return true;
+}
+
+bool ABaseEntity::CanReact() const
+{
+	if(CurrentState == EEntityState::Idle
+		|| CurrentState == EEntityState::Moving)
+		return true;
+	return false;
+}
+
 bool ABaseEntity::UseSkill(ESkillSlot ToUse, ABaseEntity * Target, FVector Location)
 {
 	UBaseSkill * NewSkill = GetSkill(ToUse);
@@ -210,7 +280,21 @@ bool ABaseEntity::UseSkill(ESkillSlot ToUse, ABaseEntity * Target, FVector Locat
 	return CurrentSkill->Use(this, Target, TargetLocation);
 }
 
-UBaseSkill * ABaseEntity::GetSkill(ESkillSlot Slot)
+void ABaseEntity::FinishCurrentSkill()
+{
+	if(!CurrentSkill)
+		return;
+
+	CurrentSkill->Finish();
+	CurrentSkill = nullptr;
+}
+
+USkillSet * ABaseEntity::GetSkillSet() const
+{
+	return SkillSet;
+}
+
+UBaseSkill * ABaseEntity::GetSkill(ESkillSlot Slot) const
 {
 	if(!SkillSet)
 		return nullptr;

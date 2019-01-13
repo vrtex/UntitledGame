@@ -12,6 +12,8 @@
 #include "Interface/InventoryWidget.h"
 #include "NPC/BaseNPC.h"
 #include "ActiveSkills/BaseSkill.h"
+#include "Interface/SkillTreeWidget.h"
+#include "Interface/SkillTreeWidget.h"
 #include "BasePlayerController.generated.h"
 
 /**
@@ -50,6 +52,8 @@ class UNTITLEDGAME_API ABasePlayerController : public APlayerController
 	UFUNCTION(BlueprintCallable, Category = "Input")
 		void ShowInventory();
 	UFUNCTION(BlueprintCallable, Category = "Input")
+		void ToggleSkillTree();
+	UFUNCTION(BlueprintCallable, Category = "Input")
 		void OpenShop(UUserWidget * ShopWidget, ABaseNPC * ShopOwner);
 
 	UFUNCTION(BlueprintPure, Category = "Character")
@@ -82,6 +86,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 		UInventoryWidget * InventoryWidget = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skills")
+		USkillTreeWidget * CharacterSkillTree = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skills")
+		TSubclassOf<USkillTreeWidget> SkillTreeClass;
 
 	void SetMovementTarget(EMovementTargetType MoveType, AActor * NewTargetActor);
 

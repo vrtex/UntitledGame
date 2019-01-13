@@ -177,13 +177,10 @@ void USkillSet::UpdateFromEqupiment()
 			continue;
 		if(ObservedEq->HasItem(Item))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Has Item"));
 			ChangeSkill(CurrentSlot, ObservedEq->GetItem(Item).GrantedSkill, false);
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("No Item"));
-
 			ClearSkill(CurrentSlot, false);
 		}
 	}

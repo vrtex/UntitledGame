@@ -39,19 +39,27 @@ bool UBasicMeleeAttack::Use_Implementation(ABaseEntity * User, ABaseEntity * Tar
 	}
 	CurrentUser = User;
 	CurrentTarget = Target;
+
+	if(!CurrentUser->CanReact())
+		return false;
+
+	// attacking
 	if(RangeSphere->IsOverlappingActor(CurrentTarget))
 	{
+
 		EnemyDetected(nullptr, CurrentTarget, nullptr, 0, false, FHitResult());
 		return true;
 	}
+
+	// moving
 	if(Target)
 	{
-		UAIBlueprintHelperLibrary::SimpleMoveToActor(CurrentUser->GetController(), CurrentTarget);
+		CurrentUser->MoveToActor(Target);
 		RangeSphere->OnComponentBeginOverlap.AddDynamic(this, &UBasicMeleeAttack::EnemyDetected);
 	}
 	else
 	{
-		UAIBlueprintHelperLibrary::SimpleMoveToLocation(CurrentUser->GetController(), TargetLocation);
+		CurrentUser->MoveToLocation(TargetLocation);
 	}
 	return true;
 }
@@ -59,8 +67,16 @@ bool UBasicMeleeAttack::Use_Implementation(ABaseEntity * User, ABaseEntity * Tar
 void UBasicMeleeAttack::Cancel_Implementation()
 {
 	if(CurrentUser)
-		CurrentUser->GetCharacterMovement()->StopMovementImmediately();
+		CurrentUser->StopMovement();
 	ClearTarget();
+}
+
+void UBasicMeleeAttack::Finish_Implementation()
+{
+	if(!CurrentUser || !CurrentTarget)
+		return;
+	//EnemyDetected(nullptr, CurrentTarget, nullptr, 0, false, FHitResult());
+	Attack();
 }
 
 void UBasicMeleeAttack::BeginDestroy()
@@ -79,7 +95,12 @@ void UBasicMeleeAttack::EnemyDetected(UPrimitiveComponent * OverlappedComponent,
 {
 	if(OtherActor != CurrentTarget)
 		return;
-	Attack();
+	if(!CurrentUser)
+		return;
+	CurrentUser->FaceActor(CurrentTarget);
+	CurrentUser->StopMovement();
+	CurrentUser->SetCurrentState(EEntityState::MeleeAttack);
+	// Attack();
 }
 
 float UBasicMeleeAttack::Attack()

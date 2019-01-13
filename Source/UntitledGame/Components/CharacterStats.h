@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "Includes.h"
 #include "Interfaces/DamageInfo.h"
+#include "Interfaces/StatsModifier.h"
+#include "Components/CharacterStat.h"
 #include "CharacterStats.generated.h"
 
 
@@ -31,6 +33,21 @@ public:
 
 	FStatsDelegate OnChange;
 
+	UFUNCTION()
+		void AddLevel();
+
+	/*
+	void AddMod(const FStatsModifier & Mod);
+
+	void RemoveMod(const FStatsModifier & Mod);
+	*/
+
+	void AddList(const FStatsModifierList & List);
+
+	void RemoveList(const FStatsModifierList & List);
+
+	void RecalculateStats();
+
 	UFUNCTION(BlueprintCallable, Category = "Health")
 		void SetMaxHealth(float NewMax);
 
@@ -50,6 +67,9 @@ public:
 		void SetResistTo(EDamageElement Element, float NewValue);
 	
 protected:
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+		TMap<EStatField, UCharacterStat *> StatList;
 
 	// Clamp those bitches to <0, 1> or do some funky shit
 	UPROPERTY(EditAnywhere, Category = "Defence|Resists")
