@@ -181,6 +181,7 @@ void USkillSet::UpdateFromEqupiment()
 		}
 		else
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Changing"));
 			ClearSkill(CurrentSlot, false);
 		}
 	}
